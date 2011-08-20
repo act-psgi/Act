@@ -1,4 +1,8 @@
 package Act::Handler::User::Stats;
+
+use strict;
+use 'Act::Handler';
+
 use Act::Config;
 use Act::Template::HTML;
 use Act::User;
@@ -64,6 +68,7 @@ sub handler {
     my $template = Act::Template::HTML->new();
     $template->variables( stats => $stats );
     $template->process('user/stats');
+    return;
 }
 
 1;
