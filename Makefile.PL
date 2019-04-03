@@ -3,7 +3,6 @@ all_from 'lib/Act.pm';
 
 requires(
     'AppConfig'                          => 0,
-    'Authen::Passphrase'                 => 0,
     'Clone'                              => 0,
     'Crypt::Eksblowfish::Bcrypt'         => 0,
     'DBD::Pg'                            => '1.22',

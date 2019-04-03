@@ -1,7 +1,6 @@
 requires 'AppConfig'                  => 0;
 requires 'Clone'                      => 0;
 requires 'Crypt::Eksblowfish::Bcrypt' => 0;
-requires 'DBI'                        => 0;
 requires 'DBD::Pg'                    => 1.22;
 requires 'DBI'                        => 0;
 requires 'Data::ICal'                 => 0.16;
