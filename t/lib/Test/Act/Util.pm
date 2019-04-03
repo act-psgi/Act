@@ -1,5 +1,4 @@
 # this is a helper test module
-package Test::Act::Util;
 use Act::Config;
 use DBI;
 use Act::Talk;
