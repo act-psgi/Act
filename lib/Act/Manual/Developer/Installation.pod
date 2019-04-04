@@ -1,5 +1,6 @@
 =head1 Installing Act on your system
 
+B<This installation guide is obsolete with the PSGI engine.>
 
 This doc is being rewritten. Here's the new outline:
 
