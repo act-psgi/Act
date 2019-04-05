@@ -9,6 +9,7 @@ use Act::Talk;
 use Act::Util;
 use Digest::MD5 qw( md5_hex );
 use Carp;
+use Digest::MD5;
 use Crypt::Eksblowfish::Bcrypt;
 use List::Util qw(first);
 
@@ -50,7 +51,7 @@ our %sql_opts = ( 'order by' => 'user_id' );
 
 sub get_items {
     my ($class, %args) = @_;
-    
+
     if( $args{name} ) {
         $args{name} = Act::Util::search_expression( quotemeta( $args{name} ) );
         $args{name} =~ s/\\\*/.*/g;
@@ -62,7 +63,7 @@ sub get_items {
 sub rights {
     my $self = shift;
     return $self->{rights} if exists $self->{rights};
-    
+
     # get the user's rights
     $self->{rights} = {};
 
@@ -118,6 +119,7 @@ sub talks {
     my ($self, %args) = @_;
     return Act::Talk->get_talks( %args, user_id => $self->user_id );
 }
+
 sub register_participation {
   my ( $self ) = @_;
 
@@ -146,6 +148,7 @@ sub register_participation {
   $sth->finish();
   $Request{dbh}->commit;
 }
+
 sub participation {
     my ( $self ) = @_;
     my $sth = sql('SELECT * FROM participations p WHERE p.user_id=? AND p.conf_id=?',
@@ -318,7 +321,8 @@ sub create {
 
     my $part = delete $args{participation};
     my $password = delete $args{password};
-    $args{passwd} = $class->_crypt_password($password)
+    my $login = $args{login};
+    $args{passwd} = $class->_crypt_password($password,$login)
         if defined $password;
     my $user = $class->SUPER::create(%args);
     if ($user && $part && $Request{conference}) {
@@ -371,7 +375,7 @@ sub possible_duplicates {
     my ($self) = @_;
     my %seen = ( $self->user_id => 1 );
     my @twins;
-    
+
     for my $attr (qw( login email nick_name full_name last_name )) {
         push @twins, grep { !$seen{ $_->user_id }++ }
             map {@$_}
@@ -386,6 +390,7 @@ sub possible_duplicates {
 
     return \@twins;
 }
+
 sub most_recent_participation {
     my ($self) = @_;
 
@@ -401,7 +406,7 @@ sub most_recent_participation {
         }
         # sort participations in reverse chronological order
         my @p = sort { $b->{datetime} cmp $a->{datetime} } @$participations;
-        
+
         # choose most recent participation
         $chosen = $p[0];
     }
@@ -419,11 +424,25 @@ sub set_password {
     return 1;
 }
 
+# _crypt_password can be called:
+#  - either with two arguments
+#    during user creation:     $class->_crypt_password($password,$login)
+#  - or as an object method    $user->_crypt_password($password)
+#
+# Rationale: Storing a secure password can't be achieved by crypting
+# the password alone.  Different users which have the same password
+# would then have the same encrypted password.  This is evil.  Best
+# practice requires a random salt to be used in addition to the
+# password, and this needs to be stored in the database.  For now we
+# apply a cheap workaround and derive the salt from the login name.
+# Using MD5 for that makes sure that we get exactly 16 octets,
+# as required by Bcrypt, regardless of the length of the login name.
 sub _crypt_password {
     my $class = shift;
     my $pass = shift;
-    my $cost = $Config->bcrypt_cost;
-    my $salt = $Config->bcrypt_salt;
+    my $login = shift  //  $class->login;
+    my $cost = 8;
+    my $salt = Digest::MD5::md5($login);
     return '{BCRYPT}' . Crypt::Eksblowfish::Bcrypt::en_base64(
         Crypt::Eksblowfish::Bcrypt::bcrypt_hash({
             key_nul => 1,
