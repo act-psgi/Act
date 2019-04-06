@@ -7,10 +7,11 @@ use Act::Country;
 use Act::Object;
 use Act::Talk;
 use Act::Util;
-use Digest::MD5 qw( md5_hex );
+use Digest::MD5 qw(md5_hex);
+use Digest::SHA qw(sha512);
 use Carp;
-use Digest::MD5;
-use Crypt::Eksblowfish::Bcrypt;
+use Authen::Passphrase::BlowfishCrypt;
+use Authen::Passphrase;
 use List::Util qw(first);
 
 # rights
@@ -321,8 +322,7 @@ sub create {
 
     my $part = delete $args{participation};
     my $password = delete $args{password};
-    my $login = $args{login};
-    $args{passwd} = $class->_crypt_password($password,$login)
+    $args{passwd} = $class->_crypt_password($password)
         if defined $password;
     my $user = $class->SUPER::create(%args);
     if ($user && $part && $Request{conference}) {
@@ -417,65 +417,82 @@ sub most_recent_participation {
 }
 
 sub set_password {
-    my $self = shift;
-    my $password = shift;
-    my $crypted = $self->_crypt_password($password);
-    $self->update( passwd => $crypted );
+    my ($self, $password) = @_;
+    $self->update(passwd => $self->_crypt_password($password));
     return 1;
 }
 
-# _crypt_password can be called:
-#  - either with two arguments
-#    during user creation:     $class->_crypt_password($password,$login)
-#  - or as an object method    $user->_crypt_password($password)
-#
-# Rationale: Storing a secure password can't be achieved by crypting
-# the password alone.  Different users which have the same password
-# would then have the same encrypted password.  This is evil.  Best
-# practice requires a random salt to be used in addition to the
-# password, and this needs to be stored in the database.  For now we
-# apply a cheap workaround and derive the salt from the login name.
-# Using MD5 for that makes sure that we get exactly 16 octets,
-# as required by Bcrypt, regardless of the length of the login name.
-sub _crypt_password {
-    my $class = shift;
-    my $pass = shift;
-    my $login = shift  //  $class->login;
-    my $cost = 8;
-    my $salt = Digest::MD5::md5($login);
-    return '{BCRYPT}' . Crypt::Eksblowfish::Bcrypt::en_base64(
-        Crypt::Eksblowfish::Bcrypt::bcrypt_hash({
-            key_nul => 1,
-            cost => $cost,
-            salt => $salt,
-        }, $pass)
-    );
+sub check_password {
+    my ($self, $pass) = @_;
+
+    my $ppr = Authen::Passphrase->from_rfc2307($self->{passwd});
+    return 1 if $ppr->match($self->_sha_pass($pass));
+    return 1 if $self->_check_legacy_password($pass);
+    die 'Bad password';
 }
 
-sub check_password {
-    my $self = shift;
-    my $check_pass = shift;
 
+sub _sha_pass {
+    my ($self, $pass) = @_;
+    return sha512($pass);
+}
+
+sub _crypt_password {
+    my ($self, $pass) = @_;
+
+    my $ppr = Authen::Passphrase::BlowfishCrypt->new(
+        cost        => 8,
+        salt_random => 1,
+        passphrase  => $self->_sha_pass($pass),
+    );
+    return $ppr->as_rfc2307;
+}
+
+sub _check_legacy_password {
+    my ($self, $check_pass) = @_;
     my $pw_hash = $self->{passwd};
     my ($scheme, $hash) = $pw_hash =~ /^(?:{(\w+)})?(.*)$/;
-    $scheme ||= 'MD5';
 
-    if ($scheme eq 'MD5') {
+    if (!$scheme || $scheme eq 'MD5') {
         my $digest = Digest::MD5->new;
         $digest->add(lc $check_pass);
-        $digest->b64digest eq $hash
-            or die 'Bad password';
+        my $digest_hash = $digest->b64digest;
+        return 0 if $digest_hash ne $hash;
         # upgrade hash
         $self->set_password($check_pass);
-    }
-    elsif ($scheme eq 'BCRYPT') {
-        my $check_hash = $self->_crypt_password($check_pass);
-        $check_hash eq $pw_hash
-            or die 'Bad password';
+        return 1;
     }
     else {
-        die 'Bad user data';
+        my $check_hash = $self->_crypt_legacy_password($check_pass);
+        return 0 if $check_hash ne $pw_hash;
+        # upgrade hash
+        $self->set_password($check_pass);
+        return 1;
     }
+    return 0;
+}
+
+sub _crypt_legacy_password {
+    my $class = shift;
+    my $pass  = shift;
+    my $cost  = $Config->bcrypt_cost;
+    my $salt  = $Config->bcrypt_salt;
+
+    if (!$cost || !$salt) {
+        die "Unable to continue, need cost and salt configured in [bcrypt]";
+    }
+
+    return '{BCRYPT}'
+        . Crypt::Eksblowfish::Bcrypt::en_base64(
+        Crypt::Eksblowfish::Bcrypt::bcrypt_hash(
+            {
+                key_nul => 1,
+                cost    => $cost,
+                salt    => $salt,
+            },
+            $pass
+        )
+        );
 }
 
 1;
