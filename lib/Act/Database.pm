@@ -95,7 +95,12 @@ sub get_versions
     };
     if ($@) {
         $dbh->rollback;
+        die "Failed to retrieve the schema version:\n",
+            "DB error:   '", $dbh->errstr, "'\n",
+            "eval error: '$@'";
     }
+    defined $version
+        or  warn "No database schema version found.\n";
     $version ||= 0;
     return ( $version, required_version() );
 }
