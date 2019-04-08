@@ -108,7 +108,9 @@ sub to_app {
             };
         }
         mount "/" => sub {
-            [404, [], []];
+            my $env  = shift;
+            my $files = Plack::App::File->new(root => $Config->general_root . "/wwwdocs")->to_app;
+            return $files->($env);
         };
     };
     return $app;
@@ -136,21 +138,6 @@ sub conference_app {
         };
         Plack::App::Cascade->new( catch => [99], apps => [
             builder {
-                # XXX ugly, but functional for now
-                enable sub {
-                    my ( $app ) = @_;
-
-                    return sub {
-                        my ( $env ) = @_;
-
-                        my $res = $app->($env);
-                        $res->[0] = 99 if $res->[0] == 404;
-                        return $res;
-                    };
-                };
-                Plack::App::File->new(root => $Config->general_root)->to_app;
-            },
-            builder {
                 enable sub {
                     my ( $app ) = @_;
 
@@ -159,6 +146,7 @@ sub conference_app {
 
                         my $conf = $env->{'act.conference'};
                         my $path = catfile($Config->home, $conf, 'wwwdocs');
+                        warn "Building a file app to '$path' for $env->{PATH_INFO}";
                         my $files = Plack::App::File->new(root => $path)->to_app;
                         my $res = $files->($env);
                         $res->[0] = 99 if $res->[0] == 404;
