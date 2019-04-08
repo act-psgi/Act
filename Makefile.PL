@@ -3,9 +3,11 @@ all_from 'lib/Act.pm';
 
 requires(
     'AppConfig'                          => 0,
+    'Authen::Passphrase::BlowfishCrypt'  => 0,
+    'Authen::Passphrase'                 => 0,
     'Clone'                              => 0,
     'Crypt::Eksblowfish::Bcrypt'         => 0,
-    'DBD::Pg'                            => '1.22',
+    'DBD::Pg'                            => '3',
     'DBI'                                => 0,
     'Data::ICal'                         => '0.16',
     'Data::ICal::DateTime'               => 0,
