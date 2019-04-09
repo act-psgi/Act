@@ -17,6 +17,8 @@ use version;
 eval 'use Module::CoreList';
 if ($@) { plan skip_all => 'Module::CoreList not installed' }
 
+my $minimum_perl_version = 5.020;
+
 my %used;
 find( \&wanted, qw/ lib t / );
 
@@ -59,7 +61,7 @@ my %required;
 
 for ( sort keys %used ) {
     my $first_in = Module::CoreList->first_release($_);
-    next if defined $first_in and $first_in <= 5.00803;
+    next if defined $first_in and $first_in <= $minimum_perl_version;
     next if /^(Act|inc|Test::Act)(::|$)/;
 
     #warn $_;
@@ -69,8 +71,6 @@ for ( sort keys %used ) {
 
 for (sort keys %required) {
     my $first_in = Module::CoreList->first_release($_, $required{$_});
-    fail("Required module $_ (v. $required{$_}) is in core since $first_in")
-        if defined $first_in and $first_in <= 5.008003;
     if (require_ok($_)) {
         if (defined $required{$_}) {
             my $version = eval '$' . $_ . '::VERSION';
