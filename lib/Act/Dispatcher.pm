@@ -77,7 +77,6 @@ my %private_handlers = (
 
 sub to_app {
     Act::Config::reload_configs();
-    my $conference_app = conference_app();
     my $app            = builder {
         enable 'Debug', panels => [split(/\s+/, $ENV{ACT_DEBUG})]
             if $ENV{ACT_DEBUG};
@@ -100,6 +99,7 @@ sub to_app {
             map { $_ => $_ } %{ $Config->conferences };
         for my $uri (keys %confr) {
             my $conference = $confr{$uri};
+            my $conference_app = conference_app($conference);
             mount "/$uri/" => sub {
                 my $env = shift;
                 $env->{'act.conference'} = $conference;
@@ -117,6 +117,8 @@ sub to_app {
 }
 
 sub conference_app {
+    my $conference = shift;
+    my $path = catfile($Config->home, $conference, 'wwwdocs');
     my $static_app = builder {
         enable '+Act::Middleware::Auth';
         Act::Handler::Static->new->to_app;
@@ -140,20 +142,17 @@ sub conference_app {
             builder {
                 enable sub {
                     my ( $app ) = @_;
-
                     return sub {
                         my ( $env ) = @_;
-
-                        my $conf = $env->{'act.conference'};
-                        my $path = catfile($Config->home, $conf, 'wwwdocs');
-                        warn "Building a file app to '$path' for $env->{PATH_INFO}";
-                        my $files = Plack::App::File->new(root => $path)->to_app;
-                        my $res = $files->($env);
+                        my $res = $app->($env);
                         $res->[0] = 99 if $res->[0] == 404;
                         return $res;
-                    };
+                    }
                 };
-
+                enable sub {
+                    warn "Building a file app to '$path'";
+                    Plack::App::File->new(root => $path)->to_app;
+                }
             },
             builder {
                 enable '+Act::Middleware::Auth';
