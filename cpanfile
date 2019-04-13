@@ -59,6 +59,7 @@ requires 'URI::Escape'                        => 0;
 requires 'URI'                                => 1.31;
 requires 'Wiki::Toolkit' =>  0;    # Wiki::Toolkit::Formatter::Default Wiki::Toolkit::Store::Pg
 requires 'XML::Atom' => '0.20';    # XML::Atom::Entry XML::Atom::Feed XML::Atom::Link
+requires 'YAML::Tiny' => 0;
 requires 'parent'  => 0;
 requires 'version' => 0;
 requires 'Test::Lib' => 0;
