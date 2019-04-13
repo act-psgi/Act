@@ -109,7 +109,8 @@ sub to_app {
         }
         mount "/" => sub {
             my $env  = shift;
-            my $files = Plack::App::File->new(root => $Config->general_root . "/wwwdocs")->to_app;
+            my $wwwdocs = $Config->general_root . "/wwwdocs";
+            my $files = Plack::App::File->new(root => $wwwdocs)->to_app;
             return $files->($env);
         };
     };
@@ -129,7 +130,7 @@ sub conference_app {
             my $app = shift;
             sub {
                 for ( $_[0]->{'PATH_INFO'} ) {
-                    if ( s{^/?$}{index.html} || /\.html$/ ) {
+                    if ( s{^/?$}{index.html} || /\.html$/ || m!/LOGIN!) {
                         return $static_app->(@_);
                     }
                     else {
@@ -140,34 +141,30 @@ sub conference_app {
         };
         Plack::App::Cascade->new( catch => [99], apps => [
             builder {
+                for my $uri ( keys %public_handlers ) {
+                    mount "/$uri" => _handler_app($public_handlers{$uri});
+                }
+                for my $uri ( keys %private_handlers ) {
+                    mount "/$uri" => _handler_app($private_handlers{$uri},
+                                                  private => 1);
+                }
+                mount '/' => sub { [99, [], []] };
+            },
+            builder {
                 enable sub {
                     my ( $app ) = @_;
                     return sub {
                         my ( $env ) = @_;
                         my $res = $app->($env);
-                        $res->[0] = 99 if $res->[0] == 404;
+                        # $res->[0] = 99 if $res->[0] == 404;
                         return $res;
                     }
                 };
                 enable sub {
-                    warn "Building a file app to '$path'";
                     Plack::App::File->new(root => $path)->to_app;
-                }
+                };
+                mount '/' => sub { [404, [], ["You're lost."]] };
             },
-            builder {
-                enable '+Act::Middleware::Auth';
-                for my $uri ( keys %public_handlers ) {
-                    mount "/$uri" => _handler_app($public_handlers{$uri});
-                }
-                mount '/' => sub { [99, [], []] };
-            },
-            builder {
-                enable '+Act::Middleware::Auth', private => 1;
-                for my $uri ( keys %private_handlers ) {
-                    mount "/$uri" => _handler_app($private_handlers{$uri});
-                }
-                mount '/' => sub { [404, [], []] };
-            }
         ] );
     };
 }
@@ -206,8 +203,11 @@ sub conference_app {
 
 
 sub _handler_app {
-    my ($handler) = @_;
-    return _get_handler_plugin($handler)->to_app;
+    my ($handler, %attrs) = @_;
+    builder {
+        enable '+Act::Middleware::Auth', %attrs;
+        return _get_handler_plugin($handler)->to_app;
+    }
 }
 
 1;

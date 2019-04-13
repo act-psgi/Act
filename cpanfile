@@ -49,6 +49,7 @@ requires 'Template'                           => 2.16;    # Template::Constants
 requires 'Template::Multilingual::Parser'     => 0;
 requires 'Term::ReadKey'                      => 0;
 requires 'Test::Deep::NoTest'                 => 0;
+requires 'Test::MockModule'                   => 0;
 requires 'Test::MockObject'                   => 0;
 requires 'Text::Diff'                         => 0;
 requires 'Text::WikiFormat'                   => 0;
