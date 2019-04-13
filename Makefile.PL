@@ -52,9 +52,6 @@ requires(
     'Template::Constants'                => 0,
     'Template::Multilingual::Parser'     => 0,
     'Term::ReadKey'                      => 0,
-    'Test::Deep::NoTest'                 => 0,
-    'Test::MockModule'                   => 0,
-    'Test::MockObject'                   => 0,
     'Text::Diff'                         => 0,
     'Text::WikiFormat'                   => 0,
     'Text::xSV'                          => 0,
@@ -74,9 +71,13 @@ requires(
 );
 
 test_requires(
-    'Test::Lib'   => 0,
-    'Test::More'  => '0.96',
-    'Plack::Test' => 0,
+    'Test::Deep::NoTest'                 => 0,
+    'Test::Lib'                          => 0,
+    'Test::More'                         => '0.96',
+    'Test::MockModule'                   => 0,
+    'Test::MockObject'                   => 0,
+    'Plack::Test'                        => 0,
+    'YAML::Tiny'                         => 0,
 );
 
 auto_install();
