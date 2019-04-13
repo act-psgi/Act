@@ -53,6 +53,7 @@ requires(
     'Template::Multilingual::Parser'     => 0,
     'Term::ReadKey'                      => 0,
     'Test::Deep::NoTest'                 => 0,
+    'Test::MockModule'                   => 0,
     'Test::MockObject'                   => 0,
     'Text::Diff'                         => 0,
     'Text::WikiFormat'                   => 0,
