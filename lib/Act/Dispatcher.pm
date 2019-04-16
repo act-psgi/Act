@@ -5,8 +5,7 @@ use Act::Config;
 use Act::Handler::Static;
 use Act::Util;
 
-use Encode qw(decode_utf8);
-use File::Spec::Functions qw(catfile);
+use File::Spec::Functions qw(catfile rel2abs);
 use List::Util qw(first);
 use Module::Pluggable::Object;
 use Plack::App::Cascade;
@@ -95,6 +94,8 @@ sub to_app {
                 $app->($env);
             };
         };
+
+        mount "/photos" => root_file_app($Config->general_dir_photos);
         my %confr = %{ $Config->uris },
             map { $_ => $_ } %{ $Config->conferences };
         for my $uri (keys %confr) {
@@ -107,12 +108,7 @@ sub to_app {
                 $conference_app->($env);
             };
         }
-        mount "/" => sub {
-            my $env  = shift;
-            my $wwwdocs = $Config->general_root . "/wwwdocs";
-            my $files = Plack::App::File->new(root => $wwwdocs)->to_app;
-            return $files->($env);
-        };
+        mount "/" => root_file_app('wwwdocs');
     };
     return $app;
 }
@@ -150,25 +146,17 @@ sub conference_app {
                 }
                 mount '/' => sub { [99, [], []] };
             },
-            builder {
-                enable sub {
-                    my ( $app ) = @_;
-                    return sub {
-                        my ( $env ) = @_;
-                        my $res = $app->($env);
-                        # $res->[0] = 99 if $res->[0] == 404;
-                        return $res;
-                    }
-                };
-                enable sub {
-                    Plack::App::File->new(root => $path)->to_app;
-                };
-                mount '/' => sub { [404, [], ["You're lost."]] };
-            },
+            Plack::App::File->new(root => $path)->to_app,
         ] );
     };
 }
 
+sub root_file_app {
+    my ($rel_path) = @_;
+    my $abs_path = rel2abs($rel_path,$Config->general_root);
+    warn "Rel path = $rel_path;\n abs_path = $abs_path\n";
+    Plack::App::File->new(root => $abs_path)->to_app;
+}
 
 {
     my @HANDLERS;
