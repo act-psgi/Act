@@ -207,6 +207,68 @@ Act::Dispatcher - Dispatch web request
 
 =head1 SYNOPSIS
 
-No user-serviceable parts. Warranty void if open.
+  # Fire up the dispatcher as a PSGI application
+  use Act::Dispatcher;
+  Act::Dispatcher->to_app;
+
+=head1 The URL hierarchy
+
+On top level, the dispatcher serves 1) user photos, 2) the
+conferences, and 3) static files coming with the distributions.
+
+The conferences themselves have their own dispatcher in
+C<conference_app>, which handles 1) HTML files provided by organizers,
+2) "action" handlers from the list of public and private handlers, and
+3) static files provided by organizers.
+
+The handlers themselves in the C<Act::Handler::*> namespace are still
+using the traditional Apache/mod_perl approach: They communicate with
+other components through global variables C<$Config> and
+C<%Request>. The translation between PSGI style C<env> and Apache
+style C<Request> is done in L<Act::Handler>, and L<Act::Config> takes
+care to export them as globals to all modules using it.
+
+=head1 Maintainer's Introduction to PSGI and Plack
+
+From bottom to top, the PSGI stack looks like this:
+
+=over
+
+=item The I<Application>
+
+The application does the work to convert data from the HTTP request to
+a response.  It receives the data as a hash reference C<$env> and
+returns the response as a hashref C<[$code,[@headers],[@body]]>.
+
+=item Middleware
+
+Middleware is a bit of a misnomer since it is rather I<aroundware>.
+A middleware component looks like this:
+
+    sub middleware {
+        my ($app,$env) = @_;
+        # Do something with $env
+        my $response = $app($env);
+        # Do something with $response
+        return $response;
+    }
+
+Middleware is extremely powerful and versatile.  As long as it returns
+a C<$response>, nobody knows whether it got this response from calling
+C<$app>, from calling any other application, or from making it up
+itself.
+
+=item Builder
+
+The builders compose an application by distributing URLs between
+different applications (that's what C<mount> is for), and wrap them in
+middleware components (with C<enable>).
+
+As we see in this module, this can be used hierarchically: An
+application C<mount>-ed for some part of URLspace can itself be
+constructed by a C<builder> which wraps it into another set of
+middleware components.
+
+=back
 
 =cut
