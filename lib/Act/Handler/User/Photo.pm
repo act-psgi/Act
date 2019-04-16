@@ -17,7 +17,7 @@ sub _photo_dir_path {
     if ($Config->general_dir_photos =~ /^\//) {
         return $Config->general_dir_photos;
     }
-    return catfile($Config->root, $Config->general_dir_photos);
+    return catfile($Config->general_root, $Config->general_dir_photos);
 }
 
 sub _resize_photo {
@@ -112,7 +112,7 @@ sub handler {
     $template->variables(
         error     => $error,
         formats   => [sort keys %Act::Config::Image_formats],
-        photo_uri => join ('/', undef, $Request{user}{photo_name}),
+        photo_uri => join ('/','/photos', $Request{user}{photo_name}),
     );
     $template->process('user/photo');
     return;
