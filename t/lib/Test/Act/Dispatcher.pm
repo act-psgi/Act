@@ -4,6 +4,7 @@ package Test::Act::Dispatcher;
 use parent 'Exporter';
 our @EXPORT = qw(mock_config     mock_file    mock_static
                  mock_middleware mock_handler
+                 mock_config_value
             );
 
 use Test::MockObject;
@@ -76,7 +77,10 @@ $cfg->set_always(uris => \%uris)
     ->set_always(general_root => 'testhome')
     ->set_always(email_sendmail => '/usr/sbin/sendmail')
     ->set_always(database_debug => 0)
-    ->set_always(conferences => { map { $_ => 1 } values %uris });
+    ->set_always(conferences => { map { $_ => 1 } values %uris })
+    ->set_always(general_dir_photos => 'photos')
+    ;
+
 
 sub mock_config {
     return $cfg;

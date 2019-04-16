@@ -1,13 +1,18 @@
 #!perl -w
 
 use strict;
+
+# Modules we need
+use File::Spec::Functions qw(rel2abs);
+use HTTP::Request::Common;
+use Act::Util;
+
+## Test environment
 use Test::MockModule;
 use Test::More 0.98; # We're using subtests
-use Act::Util;
-use HTTP::Request::Common;
 use Test::Lib;
-use Test::Act::Dispatcher;
 use Plack::Test;
+use Test::Act::Dispatcher;
 
 # main dispatch tables - copied from Act::Dispatcher.
 # Test as many as you want.
@@ -93,7 +98,7 @@ my $driver = Test::Act::Dispatcher->driver;
 my $Config = mock_config;
 
 subtest "Paths without a conference path" => sub {
-    plan tests => 4;
+    plan tests => 6;
   TODO: {
         # The root page of an Act conference server should deliver
         # a decent page.
@@ -107,6 +112,19 @@ subtest "Paths without a conference path" => sub {
     }
 
     {
+        # The root directory also holds the user photos, located
+        # at a configurable directory.  Can be configured as an
+        # absolute path, or relative to $ACTHOME.
+        my $path = '/photos/camel.jpg';
+        my $photo_dir = $Config->general_dir_photos;
+        my %report  = $driver->request(GET $path);
+        is ($report{app},'Plack::App::File',
+            "'$path': Processed by a file app");
+        is ($report{root}, rel2abs($photo_dir,$Config->general_root),
+            "'$path': Delivered from '$photo_dir'");
+    }
+
+    {
         # The root directory may also contain static documents which
         # are provided with Act software.  Every URL which does not
         # fall in a conference domain is expected to be handled by a
@@ -115,7 +133,7 @@ subtest "Paths without a conference path" => sub {
         my %report  = $driver->request(GET $path);
         is ($report{app},'Plack::App::File',
              "'$path': Root directory may contain non-conference files");
-        is ($report{root}, $Config->general_root . "/wwwdocs",
+        is ($report{root}, rel2abs("wwwdocs",$Config->general_root),
             "'$path': Delivered from the correct directory");
     }
 
