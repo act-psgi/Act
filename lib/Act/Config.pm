@@ -200,12 +200,6 @@ sub load_configs
     # load global configuration
     _load_global_config($GlobalConfig, $home);
 
-    # Sanity checking
-    foreach (qw(general_dir_photos general_root)) {
-        my $dir =$GlobalConfig->$_;
-        die "Unable to find directory $dir for $_" unless -d $dir;
-    }
-
     # load conference-specific configuration files
     # their content may override global config settings
     my %uris;
