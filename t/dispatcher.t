@@ -8,11 +8,21 @@ use HTTP::Request::Common;
 use Act::Util;
 
 ## Test environment
-use Test::MockModule;
 use Test::More 0.98; # We're using subtests
-use Test::Lib;
+use Test::MockModule;
 use Plack::Test;
+use Test::Lib;
 use Test::Act::Dispatcher;
+
+# See the description in L<Test::Act::Dispatcher> how these tests
+# work. The $driver is sort of an object which accepts HTTP requests
+# and turns the HTTP responses into a %results hash.
+#
+# The tests are organized into four groups:
+#  - Tests for URLs without a conference part
+#  - Tests for conference HTML pages
+#  - Tests for conference actions
+#  - Tests for conference files.
 
 # main dispatch tables - copied from Act::Dispatcher.
 # Test as many as you want.
