@@ -154,7 +154,6 @@ sub conference_app {
 sub root_file_app {
     my ($rel_path) = @_;
     my $abs_path = rel2abs($rel_path,$Config->general_root);
-    warn "Rel path = $rel_path;\n abs_path = $abs_path\n";
     Plack::App::File->new(root => $abs_path)->to_app;
 }
 
@@ -228,6 +227,13 @@ C<%Request>. The translation between PSGI style C<env> and Apache
 style C<Request> is done in L<Act::Handler>, and L<Act::Config> takes
 care to export them as globals to all modules using it.
 
+The C<LOGIN> url is a special case because it is not an URL you would
+type into a browser but rather the action attribute of a form element.
+In legacy code, this was handled as a special case in the Apache
+configuration.  Here we treat it "like HTML files", because all it
+needs is an application which passes through the
+L<Act::Middleware::Auth> layer as a "public" handler.
+
 =head1 Maintainer's Introduction to PSGI and Plack
 
 From bottom to top, the PSGI stack looks like this:
@@ -257,6 +263,10 @@ Middleware is extremely powerful and versatile.  As long as it returns
 a C<$response>, nobody knows whether it got this response from calling
 C<$app>, from calling any other application, or from making it up
 itself.
+
+The processing of HTML pages is an example of such a side-stepping
+where the dispatcher uses an inline middleware to call
+L<Act::Handler::Static> instead of the app passed by the caller.
 
 =item Builder
 
