@@ -13,6 +13,7 @@ use Carp;
 use Authen::Passphrase::BlowfishCrypt;
 use Authen::Passphrase;
 use List::Util qw(first);
+use Try::Tiny;
 
 # rights
 our @Rights = qw( admin users_admin talks_admin news_admin wiki_admin
@@ -463,7 +464,13 @@ sub _check_legacy_password {
         return 1;
     }
     else {
-        my $check_hash = $self->_crypt_legacy_password($check_pass);
+        my $check_hash;
+        try {
+            $check_hash = $self->_crypt_legacy_password($check_pass);
+        } catch {
+            # [bcrypt] config vars aren't defined, so no bcrypt legacy
+            return 0;
+        };
         return 0 if $check_hash ne $pw_hash;
         # upgrade hash
         $self->set_password($check_pass);
