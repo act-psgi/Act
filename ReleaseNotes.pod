@@ -1,0 +1,85 @@
+=encoding utf8
+
+=head1 Act evolution stage0 Release Notes
+
+Well, this isn't exactly a release, but it is a status: A fork of Act
+which is easy to install, passes all its unit tests and can perform
+some real life workflows.
+
+=head2 Overview
+
+This is a fork of L<Act|https://github.com/book/Act>, the conference
+toolkit which has helped organizing lots of Perl conferences.  It is a
+pretty eclectic one, including stuff from the
+L<psgi|https://github.com/book/Act/tree/psgi> branch of the original
+repository, stuff from Ilya Chesnokov's
+L<psgi_fixes|https://github.com/ichesnokov/Act/tree/psgi_fixes>
+branch, and from Wesley Schwengle's
+L<act-two|https://github.com/waterkip/Act/tree/act-two> branch.  Up to
+this stage, this fork intentionally doesn't contain much work of its
+own: It is a collection of valuable stuff found on different
+locations.  Additions and changes were made only to the end to get the
+installation "up and running".
+
+As you'd guess from the ancestry, this fork is based on PSGI instead
+of the original which operates on CGI and mod_perl.  This is also an
+intentional change, because 1) the original setup is rather difficult
+to reproduce, 2) PSGI web servers allow for convenient development and
+debugging, and 3) it doesn't matter at all for many other components
+of Act (e.g. the database handling).
+
+The original work at this stage - in addition to bug fixes - is a
+rework of the dispatcher module, which now is a bit simpler, as a set
+of unit tests, and some documentation.
+
+=head2 Purpose
+
+The releases in this fork shall all have the following properties:
+
+=over
+
+=item Can be installed easily.
+
+For Debian and Ubuntu, there's a procedure to install the set over at
+L<act-starter-debian|https://github.com/HaraldJoerg/act-starter-debian>,
+others should find instructions at
+L<Act::Manual::Developer::DeveloperInstall>.
+
+=item All test cases pass
+
+This should go without saying, but we've seen forks where the tests
+won't even compile.
+
+=item New features come with tests and documentation
+
+A software projects driven by volunteers needs an easy welcome to new
+developers who are willing to spend a few, but not too much brain
+cycles.
+
+=back
+
+=head2 Disclaimer
+
+This software comes with the same license as the original version of
+Act (see LICENSE), though the Copyright section would need some
+additions.  As stated there, it comes WITHOUTANY WARRANTY; without
+even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See either the GNU General Public License or the
+Artistic License for more details.
+
+=head2 Want to get involved?
+
+Questions, comments, issue reports, and pull requests are welcome!
+
+The development repository is at
+L<GitHub|https://github.com/HaraldJoerg/Act>.  The active (and
+default) branch is C<evolution>, the status described here will live
+in the C<stage0> branch.  Other branches exist for pull request
+against the original repository.
+
+
+=head2 Contact
+
+...for this fork: Harald Jörg, <haj@posteo.de>.  I'm also occasionally
+hanging around in the #act channel at irc.perl.org and reading the Act
+mailing list.
