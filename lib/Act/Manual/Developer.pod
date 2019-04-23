@@ -43,6 +43,10 @@ How to write handlers.
 
 Act's database usage.
 
+=item L<Act::Manual::Developer::Debugging>
+
+What Act is providing to help you finding bugs.
+
 =back
 
 =cut
