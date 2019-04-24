@@ -10,7 +10,6 @@ use Act::User;
 use Act::Util;
 use Act::Wiki;
 use DateTime;
-use Encode;
 use Text::Diff ();
 
 my %actions = (
@@ -74,7 +73,7 @@ sub wiki_recent
                 $wiki->list_recent_changes(since => $date->epoch);
     for my $node (@nodes) {
         $node->{user} = Act::User->new( user_id => $node->{metadata}{user_id}[0]);
-        $node->{name} = Act::Wiki::split_node_name(Encode::decode_utf8($node->{name}));
+        $node->{name} = Act::Wiki::split_node_name($node->{name});
         $node->{last_modified} = format_datetime_string($node->{last_modified});
     }
     $template->variables(
