@@ -90,7 +90,7 @@ sub get_cloud
     my $cloud = HTML::TagCloud->new;
     for my $t (@$tags) {
         my ($tag, $count) = @$t;
-        my $url = join '/', $Request{r}->uri, 'tag', URI::Escape::uri_escape_utf8($tag);
+        my $url = join '/', $Request{r}->script_name, 'tag', URI::Escape::uri_escape_utf8($tag);
         $cloud->add($tag, $url, $count);
     }
     return $cloud->html_and_css;
