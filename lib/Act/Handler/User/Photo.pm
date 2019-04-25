@@ -71,7 +71,7 @@ sub _upload_photo {
     my $img    = _read_photo($upload->tempname);
     my $format = _assert_format($img);
 
-    _resize_photo($img);
+    $img = _resize_photo($img);
 
     my $digest = _get_digest($img, $format);
     my $filename = $digest . $Act::Config::Image_formats{$format};
@@ -103,7 +103,7 @@ sub handler {
         };
     }
     elsif ($params->{delete}) {
-        delete_photo();
+        _delete_photo();
         $Request{user}->update(photo_name => undef);
     }
 
