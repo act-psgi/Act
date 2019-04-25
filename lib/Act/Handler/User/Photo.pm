@@ -75,7 +75,7 @@ sub _upload_photo {
 
     my $digest = _get_digest($img, $format);
     my $filename = $digest . $Act::Config::Image_formats{$format};
-    my $filename = _store_img($img, $filename, $format);
+    $filename = _store_img($img, $filename, $format);
 
     _delete_photo();
 
