@@ -1,5 +1,4 @@
-
-    Act - A Conference Toolkit
+Act - A Conference Toolkit
 
     Copyright (C) 2004-2007, by Philippe Bruhat and Éric Cholet
 
@@ -25,3 +24,13 @@
     to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
     Boston, MA 02111-1307, USA or visit their web page on the internet
     at http://www.gnu.org/copyleft/gpl.html.
+
+----
+
+The component lib/Wiki/Toolkit/Store/Database.pm has been taken and
+modified from the Wiki-Toolkit distriution at CPAN:
+
+  https://metacpan.org/release/Wiki-Toolkit
+
+  Copyright (C) 2002-2004 Kake Pugh.  All Rights Reserved.
+  Copyright (C) 2006-2013 the Wiki::Toolkit team. All Rights Reserved.
