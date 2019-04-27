@@ -22,7 +22,6 @@ requires(
     'Email::Date'                        => 0,
     'Email::MessageID'                   => '1.4',
     'Email::Send'                        => 0,
-    'Email::Send::Sendmail'              => 0,
     'Email::Simple'                      => 0,
     'Email::Simple::Creator'             => 0,
     'Email::Valid'                       => 0,

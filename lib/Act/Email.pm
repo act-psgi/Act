@@ -36,8 +36,6 @@ use Email::Simple::Creator;
 
 my $sender;
 unless ($^C) {
-    $Email::Send::Sendmail::SENDMAIL = $Config->email_sendmail;
-    #$sender = Email::Send->new( { mailer => 'Sendmail' } );
     $sender = Email::Send->new( { mailer => 'SMTP' } );
     $sender->mailer_args([Host => "127.0.0.1"]);
 }

@@ -14,7 +14,6 @@ my @simple = qw(
     database_passwd
     database_pg_dump
     database_dump_file
-    email_sendmail
     email_sender_address
     wiki_dbname
     wiki_dbuser
