@@ -34,7 +34,7 @@ Memory consumption during processing (as you might have guessed).
 =item Session
 
 The contents of the Plack session variable.  This is the session as
-managed by Plack in C<< $env->{'psgix.session'} >> and I<not> the
+managed by Plack in C<< $env-E<gt>{'psgix.session'} >> and I<not> the
 session used by Act, though, so of limited use right now.
 
 =item DBITrace

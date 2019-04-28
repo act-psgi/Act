@@ -40,7 +40,7 @@ Act software at all.
 =item The Conference Homepages
 
 Each conference running their website on Act has a homepage in the
-root directory L<http://act.yapc.eu>/>,
+root directory L<http://act.yapc.eu/>,
 e.g. L<https://act.yapc.eu/gpw2019/> for the German Perl Workshop
 2019.  Some conferences use their own DNS entry,
 e.g. L<http://act.qa-hackathon.org/pts2019/> or
@@ -158,7 +158,7 @@ The list looks like this:
 
 So, templates provided by the conference organizers take precedence
 over those provided by Act (or added by the people who run the Act
-server). 
+server).
 
 Template files ending in C<.html> are available as corresponding URLs,
 and any file name can be referenced in the templates with TT's
