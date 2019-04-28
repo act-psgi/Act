@@ -44,6 +44,12 @@ twenty conferences in Europe and in the U.S. between 2004 and 2007.
 However, becoming the official Perl conference software is on the roadmap
 of our world domination plan! C<;-)>
 
+Ten years later it turned out that world domination had to be slightly
+delayed.  Although Act and the French mongers never stopped to help
+organize conferences, the software had accumulated a certain amount of
+patina.  Several teams and individuals have started working on the
+software, and here's the result: Act is still breathing.
+
 =head1 The Name
 
 The name of the toolkit is Act, not ACT. 
@@ -64,10 +70,19 @@ conference...
 
 =head2 Code contributors
 
+  Sébastien Aperghis-Tramoni
+  Laurent Boivin
   Gianni "dakkar" Cecarelli
+  Ilya Chesnokov
   Elizabeth Cortell
+  Rob Hoelz
+  Harald Jörg
   Thomas Klausner
+  Graham Knop
+  Dagfinn Ilmari Mannsåker
   Tatsuhiko Miyagawa
+  Wesley Schwengle
+  Emanuel Seyman
   Jesse Vincent
 
 =head2 Documentation contributors
@@ -97,13 +112,16 @@ conference...
   Sébastien Aperghis-Tramoni
   Farley Balasuriya
   Ann Barcomb
+  Tom Bloor
   Jim Brandt
   Luis Motta Campos
-  José Alves de Castro 
+  José Alves de Castro
   Gianni "dakkar" Cecarelli
+  Paul Cochrane
   Kurt DeMaagd
   Jeremy Fluhmann
   Anders Hellström
+  Theo van Hoesel
   Claes Jakobsson
   Jose Kahan
   Maroš Kollár
@@ -115,10 +133,13 @@ conference...
   Jonas B. Nielsen
   Salve J Nilsen
   Hiroyuki Oyama
+  Todd Rinaldo
   Dave Rolsky
-  Alberto Simões 
+  Sawyer X
+  Alberto Simões
   Enrico Sorcinelli
   Ricardo Signes
+  Patrick Spek
   Gábor Szabó
   Lars Thegler
   Daniel J. Wright
