@@ -45,6 +45,7 @@ requires(
     'Plack::Middleware::Session::Cookie' => 0,
     'Plack::Request'                     => 0,
     'Plack::Response'                    => 0,
+    'Plack::Util'                        => 0,
     'Plack::Util::Accessor'              => 0,
     'Pod::POM'                           => 0,
     'Template'                           => '2.16',

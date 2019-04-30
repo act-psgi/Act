@@ -44,6 +44,7 @@ requires 'Plack::Middleware::Session::Cookie' => 0;
 requires 'Plack::Request'                     => 0;
 requires 'Plack::Response'                    => 0;
 requires 'Plack::Test'                        => 0;
+requires 'Plack::Util'                        => 0;
 requires 'Plack::Util::Accessor'              => 0;
 requires 'Template'                           => 2.16;    # Template::Constants
 requires 'Template::Multilingual::Parser'     => 0;

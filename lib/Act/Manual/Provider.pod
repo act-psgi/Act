@@ -21,7 +21,10 @@ The online payment architecture in Act.
 
 Some performance hints for running Act on your system.
 
+=item L<Act::Manual::Provider::Templates>
+
+Templates which can be customized by an Act provider
+
 =back
 
 =cut
-

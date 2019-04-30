@@ -79,7 +79,7 @@ sub to_app {
     my $app            = builder {
         enable 'Debug', panels => [split(/\s+/, $ENV{ACT_DEBUG})]
             if $ENV{ACT_DEBUG};
-
+        enable '+Act::Middleware::ErrorPage';
         enable sub {
             my $app = shift;
             sub {

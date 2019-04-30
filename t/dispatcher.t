@@ -94,6 +94,9 @@ $act_handler_static->mock(call => mock_handler);
 my $act_handler = Test::MockModule->new('Act::Handler');
 $act_handler->mock(call => mock_handler);
 
+my $act_middleware_e404 = Test::MockModule->new('Act::Middleware::ErrorPage');
+$act_middleware_e404->mock(call => mock_middleware([]));
+
 my $act_middleware_lang = Test::MockModule->new('Act::Middleware::Language');
 $act_middleware_lang->mock(call => mock_middleware([]));
 
@@ -108,7 +111,7 @@ my $driver = Test::Act::Dispatcher->driver;
 my $Config = mock_config;
 
 subtest "Paths without a conference path" => sub {
-    plan tests => 6;
+    plan tests => 5;
   TODO: {
         # The root page of an Act conference server should deliver
         # a decent page.
@@ -146,22 +149,11 @@ subtest "Paths without a conference path" => sub {
         is ($report{root}, rel2abs("wwwdocs",$Config->general_root),
             "'$path': Delivered from the correct directory");
     }
-
-  TODO: {
-        # A non-existing path in the root directory should get
-        # a decent 404 handler - which we don't have right now.
-        local $TODO = "We don't have a decent 404 handler yet.";
-        my $path = '/WhateverRandomUrlWhichIsNoConference';
-        my %report = $driver->request(GET $path);
-        is ($report{app},'Act::Handler::NotFound',
-            "'$path': Nonexisting paths are processed by a 404 handler");
-    }
-
 };
 
 
 subtest "Conference pages" => sub {
-    plan tests => 9;
+    plan tests => 10;
     {
         # Root page for a conference should be re-routed to static
         # processing of index.html.  Language processing and
@@ -176,11 +168,13 @@ subtest "Conference pages" => sub {
         is ($report{path_info},'index.html',
             "'$path': ...Rerouted to index.html");
         my $middleware = $report{middleware};
-        is ($middleware->[0][0],'Act::Middleware::Language',
+        is ($middleware->[0][0],'Act::Middleware::ErrorPage',
+            "'$path': ...checked for 404");
+        is ($middleware->[1][0],'Act::Middleware::Language',
             "'$path': ...is language processed");
-        is ($middleware->[1][0],'Act::Middleware::Auth',
+        is ($middleware->[2][0],'Act::Middleware::Auth',
             "'$path': ....Conference homepage is subject to authentication");
-        ok (! $middleware->[1][1]{private},
+        ok (! $middleware->[2][1]{private},
             "'$path': ...-but open to the public");
     }
 
@@ -207,7 +201,7 @@ subtest "Conference pages" => sub {
 
 
 subtest "Conference actions" => sub {
-    plan tests => 8;
+    plan tests => 10;
     {
         # A public action: news
         my $action = 'news';
@@ -216,33 +210,37 @@ subtest "Conference actions" => sub {
         is ($report{app}, $public_handlers{$action},
             "'$path': Correct conference handler picked");
         my $middleware = $report{middleware};
-        is ($middleware->[0][0],'Act::Middleware::Language',
+        is ($middleware->[0][0],'Act::Middleware::ErrorPage',
+            "'$path': ...checked for 404");
+        is ($middleware->[1][0],'Act::Middleware::Language',
             "'$path': Conference action is language processed");
-        is ($middleware->[1][0],'Act::Middleware::Auth',
+        is ($middleware->[2][0],'Act::Middleware::Auth',
             "'$path': Conference homepage is subject to authentication");
-        ok (! $middleware->[1][1]{private},
+        ok (! $middleware->[2][1]{private},
             "'$path': ...but open to the public");
     }
     {
-        # A private actionn: logout
+        # A private action: logout
         my $action = 'logout';
         my $path = "/foo/$action";
         my %report = $driver->request(GET $path);
         is ($report{app}, $private_handlers{$action},
             "'$path': Correct conference handler picked");
         my $middleware = $report{middleware};
-        is ($middleware->[0][0],'Act::Middleware::Language',
+        is ($middleware->[0][0],'Act::Middleware::ErrorPage',
+            "'$path': ...checked for 404");
+        is ($middleware->[1][0],'Act::Middleware::Language',
             "'$path': Conference action is language processed");
-        is ($middleware->[1][0],'Act::Middleware::Auth',
+        is ($middleware->[2][0],'Act::Middleware::Auth',
             "'$path': Conference homepage is subject to authentication");
-        ok ($middleware->[1][1]{private},
+        ok ($middleware->[2][1]{private},
             "'$path': ...and restricted to authenticated users");
     }
 };
 
 
 subtest "Conference files" => sub {
-    plan tests => 3;
+    plan tests => 2;
     {
         # An image for a existing conference
         my $path = "/foo/images/logo.png";
@@ -251,15 +249,6 @@ subtest "Conference files" => sub {
             "'$path': File to process unchanged");
         is ($report{root}, $Config->general_root . "/foo/wwwdocs",
             "'$path': Delivered from the correct directory");
-    }
-  TODO:
-    {
-        local $TODO = "404 Handler for nonexisting conferences still missing";
-        # An image for a non-existing conference
-        my $path = "/barf/images/logo.png";
-        my %report = $driver->request(GET $path);
-        is ($report{app}, 'Act::Handler::NotFound',
-            "'$path': File not found, 404 custom response");
     }
 };
 
