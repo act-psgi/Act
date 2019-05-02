@@ -34,6 +34,7 @@ sub call {
         $env->{'act.user'} = $user;
     }
     elsif ($self->private) {
+        $env->{'act.login.destination'} = $env->{REQUEST_URI};
         return Act::Handler::Login->new->call($env);
     }
     $self->app->($env);
