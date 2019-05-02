@@ -45,7 +45,7 @@ sub _login {
     my $sid = Act::Util::create_session($user);
     $resp->cookies->{'Act_session_id'} = {
         value => $sid,
-        expires => 1,
+        path => '/',
     };
 }
 sub _logout {
@@ -61,6 +61,7 @@ sub _set_session {
     my $remember_me = shift;
     $resp->cookies->{Act_session_id} = {
         value => $sid,
+        path => '/',
         $remember_me ? ( expires => time + 6*30*24*60*60 ) : (),
     };
 }
