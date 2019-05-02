@@ -9,6 +9,8 @@ use Act::Track;
 use Act::Util;
 use Act::Handler::Talk::Util;
 
+use Encode qw(decode);
+
 sub handler
 {
     # searching by tag
@@ -16,7 +18,14 @@ sub handler
     if ($Request{path_info}) {
         my ($type, $stag) = split '/', $Request{path_info};
         if ($type eq 'tag' && $stag) {
-            $tag = Act::Util::normalize($stag);
+            eval {
+                $tag = decode('UTF-8',$stag,Encode::FB_CROAK);
+            };
+            if ($@) {
+                # Invalid encoding isn't allowed to find anything
+                Act::Util::redirect(Act::Util::make_uri('talks'));
+                return;
+            }
             my @talk_ids = Act::Tag->find_tagged(
                 conf_id     => $Request{conference},
                 type        => 'talk',

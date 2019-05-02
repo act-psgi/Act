@@ -7,6 +7,7 @@ use HTML::TagCloud;
 use URI::Escape;
 
 use Act::Config;
+use Act::Util qw( usort );
 
 # class data used by Act::Object
 our $table       = 'tags';
@@ -99,10 +100,9 @@ sub split_tags
 {
     my ($class, $string) = @_;
     my %seen;
-    return sort
-           map Act::Util::normalize($_),
+    return usort { $_ },
            grep $_ && !$seen{$_}++,
-           split /[^\w.:]+/, $string;
+           split /\s+/, $string;
 }
 
 =head1 NAME

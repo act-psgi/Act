@@ -10,6 +10,7 @@ use Act::User;
 use Act::Util;
 use Act::Wiki;
 use DateTime;
+use Encode qw( decode );
 use Text::Diff ();
 
 my %actions = (
@@ -27,8 +28,17 @@ sub handler
     if ($Request{path_info}) {
         my ($type, $tag) = split '/', $Request{path_info};
         if ($type eq 'tag' && $tag) {
-            $action = 'tags';
-            @args = ( $tag );
+            eval {
+                $tag = decode('UTF-8',$tag,Encode::FB_CROAK);
+            };
+            if ($@) {
+                # Invalid encoding isn't allowed to find anything
+                $action = 'display';
+            }
+            else {
+                $action = 'tags';
+                @args = ( $tag );
+            }
         }
     }
     else {
@@ -171,7 +181,6 @@ sub wiki_tags
 
     # searching by tag
     if ($tag) {
-        $tag = Act::Util::normalize($tag);
         my @names = Act::Tag->find_tagged(
             conf_id     => $Request{conference},
             type        => 'wiki',
