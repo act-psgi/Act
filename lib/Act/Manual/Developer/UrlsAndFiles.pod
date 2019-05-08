@@ -1,3 +1,5 @@
+=encoding utf8
+
 =head1 URL and File Hierarchies in Act
 
 In this section we describe the appearance of an Act installation in
@@ -176,4 +178,3 @@ C<"/$conference/images/logo.png"> is translated into
 C<"$ACTHOME/$conference/wwwdocs/images/logo.png">.
 
 =back
-
