@@ -1,0 +1,101 @@
+=encoding utf8
+
+=head1 Act evolution stage1 Release Notes
+
+So this is the next stage after about a month of hacking.
+
+=head2 Overview
+
+This is a fork of L<Act|https://github.com/book/Act>, the conference
+toolkit which has helped organizing lots of Perl conferences.  It is a
+pretty eclectic one, including stuff from the
+L<psgi|https://github.com/book/Act/tree/psgi> branch of the original
+repository, stuff from Ilya Chesnokov's
+L<psgi_fixes|https://github.com/ichesnokov/Act/tree/psgi_fixes>
+branch, and from Wesley Schwengle's
+L<act-two|https://github.com/waterkip/Act/tree/act-two> branch.  Up to
+stage0, this fork intentionally doesn't contain much work of its
+own: It is a collection of valuable stuff found on different
+locations.  Additions and changes were made only to the end to get the
+installation "up and running".
+
+=head2 New in stage1
+
+=over
+
+=item Unicode characters can be used in the wiki
+
+This is the most prominent change in stage1, and also a change
+compared to the production server.  The issue of the Act wiki with
+unicode was the cause for the author to investigate the Act software
+after the L<German Perl Workshop 2018|https://act.yapc.eu/gpw2018>
+where he was surprised that though the issue was well known, everyone
+decided to look in some other direction.
+
+Unicode characters can now be used in Wiki pages, as I<names> of Wiki
+pages (please don't even try that on the production server), and on
+tags.  As a side effect, talks can now also be tagged with unicode
+characters, because of: why not?
+
+=item A customizable 404 handler
+
+The default behaviour of the PSGI branch in case an URL could not be
+served was to just return an empty page.  This was even worse than in
+production, where the default Apache 404 page is shown.
+
+Now we have a 404 page in that case which is created from a template,
+and which can be overridden by site owners.
+
+=item The Act manual is now created as HTML pages
+
+This actually happens in act-starter-debian: The Act manual which
+lives in Pod pages in the F<Act::Manual> namespace is now provided as
+HTML pages starting at http://yourserver:5000/manual/Manual.html.  I
+found this helpful because this fork's documentation starts to diverge
+from the master branch which has its documentation online at
+L<http://act.mongueurs.net/doc/Manual.html>.  The default 404 page
+contains a link to the manual.
+
+=item Bugfixes
+
+In addition to the unicode stuff, a few bugs have been fixed.  Most of
+them have been introduced in the various modernization branchs, see
+the git log for details.  One bug might be a candidate for
+backporting into the master branch:
+
+=over
+
+=item *
+
+Users can now revoke the admission to record their talk.
+
+=back
+
+=back
+
+
+=head2 Disclaimer
+
+This software comes with the same license as the original version of
+Act (see LICENSE), though the Copyright section would need some
+additions.  As stated there, it comes WITHOUTANY WARRANTY; without
+even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See either the GNU General Public License or the
+Artistic License for more details.
+
+=head2 Want to get involved?
+
+Questions, comments, issue reports, and pull requests are welcome!
+
+The development repository is at
+L<GitHub|https://github.com/HaraldJoerg/Act>.  The active (and
+default) branch is C<evolution>, the status described here will live
+in the C<stage1> branch.  Other branches exist for pull request
+against the original repository.
+
+
+=head2 Contact
+
+...for this fork: Harald Jörg, <haj@posteo.de>.  I'm also occasionally
+hanging around in the #act channel at irc.perl.org and reading the Act
+mailing list.
