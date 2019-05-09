@@ -100,7 +100,7 @@ sub split_tags
 {
     my ($class, $string) = @_;
     my %seen;
-    return usort { $_ },
+    return usort { $_ }
            grep $_ && !$seen{$_}++,
            split /\s+/, $string;
 }
