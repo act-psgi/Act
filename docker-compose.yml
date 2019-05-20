@@ -15,7 +15,7 @@ services:
             - "5000"
         user: "root"
         environment:
-          - "ACT_HOME=/opt/acthome"
+          - "ACTHOME=/opt/acthome"
         volumes:
             - "./:/opt/act"
             - "filestore:/opt/filestore"

@@ -191,8 +191,8 @@ load_configs() unless $^C;
 
 sub load_configs
 {
-    my $home = $ENV{ACTHOME} // $ENV{ACT_HOME};
-    die "ACT_HOME environment variable isn't set\n" unless $home;
+    my $home = $ENV{ACTHOME};
+    die "ACTHOME environment variable isn't set\n" unless $home;
     $GlobalConfig = _init_config($home);
     %ConfConfigs = ();
     %Timestamps  = ();
