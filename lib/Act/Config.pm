@@ -179,7 +179,6 @@ my @Optional = qw(
     flickr_apikey flickr_tags
     payment_prices payment_products payment_notify_address
     registration_open registration_max_attendees registration_gratis
-    registration_gratis
     api_users
 );
 
