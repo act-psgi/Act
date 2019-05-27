@@ -165,7 +165,7 @@ subtest "Conference pages" => sub {
         my %report = $driver->request(GET $path);
         is ($report{app},'Act::Handler::Static',
             "'$path': Conference homepage is static");
-        is ($report{path_info},'index.html',
+        is ($report{path_info},'/index.html',
             "'$path': ...Rerouted to index.html");
         my $middleware = $report{middleware};
         is ($middleware->[0][0],'Act::Middleware::ErrorPage',
@@ -184,7 +184,7 @@ subtest "Conference pages" => sub {
         my %report = $driver->request(GET $path);
         is ($report{app},'Act::Handler::Static',
             "'$path': Conference homepage is static");
-        is ($report{path_info},'index.html',
+        is ($report{path_info},'/index.html',
             "'$path': ...Rerouted to index.html");
     }
 
