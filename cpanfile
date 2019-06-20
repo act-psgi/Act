@@ -40,6 +40,7 @@ requires 'Plack::App::Cascade'        => 0;
 requires 'Plack::App::File'           => 0;
 requires 'Plack::Builder'             => 0;
 requires 'Plack::Middleware::Debug'           => 0;
+requires 'Plack::Middleware::ReverseProxy'    => 0;
 requires 'Plack::Middleware::Session::Cookie' => 0;
 requires 'Plack::Request'                     => 0;
 requires 'Plack::Response'                    => 0;

@@ -42,6 +42,7 @@ requires(
     'Plack::App::File'                   => 0,
     'Plack::Builder'                     => 0,
     'Plack::Middleware::Debug'           => 0,
+    'Plack::Middleware::ReverseProxy'    => 0,
     'Plack::Middleware::Session::Cookie' => 0,
     'Plack::Request'                     => 0,
     'Plack::Response'                    => 0,
