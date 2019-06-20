@@ -65,3 +65,4 @@ requires 'YAML::Tiny' => 0;
 requires 'parent'  => 0;
 requires 'version' => 0;
 requires 'Test::Lib' => 0;
+requires 'Starman' => 0;
