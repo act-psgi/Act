@@ -122,6 +122,7 @@ sub _setup_calendar_obj {
     );
 
     my $tzdef = Data::ICal::TimeZone->new(timezone => $tz_name);
+    $tzdef  or  die($tzdef->error_message);
     $cal->add_entry($tzdef->definition);
 
     return $cal;
