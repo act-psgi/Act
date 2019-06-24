@@ -17,9 +17,7 @@ my $form = Act::Form->new(
   required => [qw(newpassword1 newpassword2)],
   optional => [qw(oldpassword)],
   filters => {
-     newpassword1 => sub { lc shift },
-     newpassword2 => sub { lc shift },
-  },
+             },
 );
 # twostep form
 my $twostep_form = Act::Form->new(
@@ -67,7 +65,7 @@ sub handler
         if ($Request{user}) { # 
             # compare passwords
             try {
-                $Request{user}->check_password(lc $fields->{oldpassword});
+                $Request{user}->check_password($fields->{oldpassword});
             }
             catch {
                 $ok = 0;

@@ -7,6 +7,7 @@ use Act::Country;
 use Act::Object;
 use Act::Talk;
 use Act::Util;
+use Encode qw(encode);
 use Digest::MD5 qw(md5_hex);
 use Digest::SHA qw(sha512);
 use Carp;
@@ -426,8 +427,8 @@ sub set_password {
 sub check_password {
     my ($self, $pass) = @_;
 
-    my $ppr = Authen::Passphrase->from_rfc2307($self->{passwd});
-    return 1 if $ppr->match($self->_sha_pass($pass));
+    my $ppr = eval { Authen::Passphrase->from_rfc2307($self->{passwd}); };
+    return 1 if $ppr && $ppr->match($self->_sha_pass($pass));
     return 1 if $self->_check_legacy_password($pass);
     die 'Bad password';
 }
@@ -435,7 +436,7 @@ sub check_password {
 
 sub _sha_pass {
     my ($self, $pass) = @_;
-    return sha512($pass);
+    return sha512(encode('UTF-8',$pass,Encode::FB_CROAK));
 }
 
 sub _crypt_password {
@@ -455,13 +456,15 @@ sub _check_legacy_password {
     my ($scheme, $hash) = $pw_hash =~ /^(?:{(\w+)})?(.*)$/;
 
     if (!$scheme || $scheme eq 'MD5') {
-        my $digest = Digest::MD5->new;
-        $digest->add(lc $check_pass);
-        my $digest_hash = $digest->b64digest;
-        return 0 if $digest_hash ne $hash;
-        # upgrade hash
-        $self->set_password($check_pass);
-        return 1;
+        my $ok = try {
+            my $digest = Digest::MD5->new;
+            $digest->add($check_pass); # this dies from wide characters
+            $digest->b64digest eq $hash;
+        } catch {
+            0; # a failed digest can be safely mapped to "bad password"
+        };
+        $ok && $self->set_password($check_pass); # upgrade hash
+        return $ok;
     }
     else {
         my $check_hash;
@@ -469,7 +472,7 @@ sub _check_legacy_password {
             $check_hash = $self->_crypt_legacy_password($check_pass);
         } catch {
             # [bcrypt] config vars aren't defined, so no bcrypt legacy
-            return 0;
+            $check_hash = '';
         };
         return 0 if $check_hash ne $pw_hash;
         # upgrade hash

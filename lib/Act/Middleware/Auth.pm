@@ -97,7 +97,7 @@ sub check_login {
             or die ["Unknown user"];
 
         try {
-            $user->check_password(lc $sent_pw);
+            $user->check_password($sent_pw);
         }
         catch {
             die ["Bad password. (Error: $_)"];
