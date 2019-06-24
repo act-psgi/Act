@@ -78,7 +78,9 @@ test_requires(
     'Test::More'                         => '0.96',
     'Test::MockModule'                   => 0,
     'Test::MockObject'                   => 0,
+    'Moo'                                => 0,
     'Plack::Test'                        => 0,
+    'Types::Standard'                    => 0,
     'YAML::Tiny'                         => 0,
 );
 
