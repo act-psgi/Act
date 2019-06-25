@@ -12,6 +12,7 @@ use AppConfig qw(:expand :argcount);
 use DateTime;
 use DateTime::Format::HTTP;
 use File::Spec::Functions qw(catfile);
+use Act::Data;
 
 # our configs
 my ($GlobalConfig, %ConfConfigs, %Timestamps);
@@ -312,7 +313,7 @@ sub get_config
     my $conf = shift;
     if ($conf && $ConfConfigs{$conf}) {
         ## see if conference is closed
-        # closed by configuraiton
+        # closed by configuration
         my $closed = !$ConfConfigs{$conf}->registration_open;
         # past conference's closing date
         unless ($closed) {
@@ -322,27 +323,9 @@ sub get_config
         }
         # max attendees reached
         if (!$closed && $ConfConfigs{$conf}->registration_max_attendees && $Request{dbh}) {
-            my $sql = 'SELECT COUNT(*) FROM participations p WHERE p.conf_id=?';
-            my @values = ($conf);
-            if ($ConfConfigs{$conf}->payment_type ne 'NONE') {
-                $sql .= <<EOF;
- AND (
-     EXISTS(SELECT 1 FROM talks t WHERE t.user_id=p.user_id AND t.conf_id=? AND t.accepted IS TRUE)
-  OR EXISTS(SELECT 1 FROM rights r WHERE r.user_id=p.user_id AND r.conf_id=? AND r.right_id IN (?,?,?))
-  OR EXISTS(SELECT 1 FROM orders o, order_items i WHERE o.user_id=p.user_id AND o.conf_id=? AND o.status=?
-                                                    AND o.order_id = i.order_id AND i.registration)
-)
-EOF
-                push @values, $conf,
-                              $conf, 'admin_users', 'admin_talks', 'staff',
-                              $conf, 'paid';
-            }
-            my $sth = $Request{dbh}->prepare_cached($sql);
-            $sth->execute(@values);
-            my ($count) = $sth->fetchrow_array();
-            $sth->finish();
-
+            my $count = Act::Data::current_attendee_number($conf,$ConfConfigs{$conf});
             $closed = ( $count >= $ConfConfigs{$conf}->registration_max_attendees );
+            warn "Closed: $closed";
         }
         $ConfConfigs{$conf}->set(closed => $closed);
 
