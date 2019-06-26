@@ -5,8 +5,6 @@ use 5.020;
 use feature qw(signatures);
 no warnings qw(experimental::signatures);
 
-use DateTime::Format::HTTP;
-
 # ----------------------------------------------------------------------
 # From Act::Config::get_config
 sub current_attendee_count ($conference,$is_free) {
@@ -31,8 +29,21 @@ EOF
     $sth->execute(@values);
     my ($count) = $sth->fetchrow_array();
     $sth->finish;
-    warn "Count: $count";
     return $count;
+}
+
+# ----------------------------------------------------------------------
+# From Act::Country::TopTen
+sub top_ten_countries ($conference) {
+    my $sth = $Act::Config::Request{dbh}->prepare_cached(
+        'SELECT u.country FROM users u, PARTICIPATIONS p'
+            . ' WHERE u.user_id = p.user_id AND p.conf_id = ?'
+            . ' GROUP BY u.country ORDER BY COUNT(u.country) DESC LIMIT 10'
+        );
+    $sth->execute( $conference );
+    my @top_ten_iso = map { $_->[0] } @{ $sth->fetchall_arrayref([]) };
+    $sth->finish;
+    return \@top_ten_iso;
 }
 
 1;
@@ -47,8 +58,9 @@ Act::Data - Interface between Act and the database
 
 =head1 SYNOPSIS
 
-use Act::Data;
-my $count = Act::Data::current_attendee_count($conference,$is_free);
+  use Act::Data;
+  $count = Act::Data::current_attendee_count($conference,$is_free);
+  $iso_ref = Act::Data::top_ten_countries($conference);
 
 =head1 DESCRIPTION
 
@@ -59,13 +71,20 @@ which interfaces are used.
 
 =head1 SUBROUTINES
 
-=head2 $count = current_attendee_count($conference,$is_free)
+=head2 $count = Act::Data::current_attendee_count($conference,$is_free)
 
 Returns the number of registered users.  For a conference which isn't
 free of charge, only users which have either submitted a talk which
 was accepted, or have some rights, or have paid, are counted towards
 the maximum number of attendees from the configuration.
 
+=head2 $iso_ref = Act::Data::top_ten_countries($conference);
+
+Returns a reference to an array containing ISO country codes for the
+ten countries where most attendees come from, ordered by decreasing
+count.
+
+Used by the template where a new user fills in his details.
 
 =head1 CAVEATS
 

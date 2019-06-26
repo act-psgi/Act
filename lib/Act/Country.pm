@@ -3,6 +3,7 @@ use strict;
 use Act::Config;
 use Act::I18N;
 use Act::Util qw(usort);
+use Act::Data;
 
 # http://www.iso.org/iso/en/prods-services/iso3166ma/02iso-3166-code-lists/list-en1-semic.txt
 my @COUNTRY_CODES = qw(
@@ -65,18 +66,9 @@ sub CountryName {
 sub TopTen
 {
     # top 10 countries of registered users
-    my $sth = $Request{dbh}->prepare_cached(
-        'SELECT u.country FROM users u, PARTICIPATIONS p'
-      . ' WHERE u.user_id = p.user_id AND p.conf_id = ?'
-      . ' GROUP BY u.country ORDER BY COUNT(u.country) DESC LIMIT 10'
-      );
-      $sth->execute( $Request{conference} );
-      my @topten = map {{ iso  => $_->[0],
-                          name => CountryName($_->[0]),
-                       }}
-                       @{ $sth->fetchall_arrayref([]) };
-      $sth->finish;
-      return \@topten;
+    my $top_ten_iso = Act::Data::top_ten_countries($Request{conference});
+    my @top_ten = map { { iso => $_, name => CountryName($_) } } @$top_ten_iso;
+    return \@top_ten;
 }
 
 sub _get_I18N_handle {
