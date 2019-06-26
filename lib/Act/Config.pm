@@ -323,9 +323,9 @@ sub get_config
         }
         # max attendees reached
         if (!$closed && $ConfConfigs{$conf}->registration_max_attendees && $Request{dbh}) {
-            my $count = Act::Data::current_attendee_number($conf,$ConfConfigs{$conf});
+            my $count = Act::Data::current_attendee_count($conf,
+                                                          $ConfConfigs{$conf}->payment_type eq 'NONE');
             $closed = ( $count >= $ConfConfigs{$conf}->registration_max_attendees );
-            warn "Closed: $closed";
         }
         $ConfConfigs{$conf}->set(closed => $closed);
 
