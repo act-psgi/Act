@@ -6,6 +6,7 @@ use parent 'Act::Handler';
 use Act::Template::HTML;
 use Act::User;
 use Act::Config;
+use Act::Data;
 use Act::Util;
 
 sub handler
@@ -31,12 +32,7 @@ sub handler
     # user logged in and registered
     if ($Request{args}{leave}) {
         # remove the participation to this conference
-        my $sth = $Request{dbh}->prepare_cached(
-            "DELETE FROM participations WHERE user_id=? AND conf_id=?"
-        );
-        $sth->execute($Request{args}{user_id}, $Request{conference});
-        $sth->finish();
-        $Request{dbh}->commit;
+        Act::Data::unregister_user($Request{conference},$Request{args}{user_id});
         return Act::Util::redirect(make_uri('payments'))
     }
     else {

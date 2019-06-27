@@ -8,8 +8,6 @@ no warnings qw(experimental::signatures);
 # ----------------------------------------------------------------------
 # From Act::Config::get_config
 sub current_attendee_count ($conference,$is_free) {
-    # TODO: The data base handler is supposed to be stored somewhere else
-    my $dbh = $Act::Config::Request{dbh};
     my $sql = 'SELECT COUNT(*) FROM participations p WHERE p.conf_id=?';
     my @values = ($conference);
     if (! $is_free) {
@@ -25,7 +23,7 @@ EOF
             $conference, 'admin_users', 'admin_talks', 'staff',
             $conference, 'paid';
     }
-    my $sth = $dbh->prepare_cached($sql);
+    my $sth = dbh()->prepare_cached($sql);
     $sth->execute(@values);
     my ($count) = $sth->fetchrow_array();
     $sth->finish;
@@ -35,7 +33,7 @@ EOF
 # ----------------------------------------------------------------------
 # From Act::Country::TopTen
 sub top_ten_countries ($conference) {
-    my $sth = $Act::Config::Request{dbh}->prepare_cached(
+    my $sth = dbh()->prepare_cached(
         'SELECT u.country FROM users u, PARTICIPATIONS p'
             . ' WHERE u.user_id = p.user_id AND p.conf_id = ?'
             . ' GROUP BY u.country ORDER BY COUNT(u.country) DESC LIMIT 10'
@@ -44,6 +42,27 @@ sub top_ten_countries ($conference) {
     my @top_ten_iso = map { $_->[0] } @{ $sth->fetchall_arrayref([]) };
     $sth->finish;
     return \@top_ten_iso;
+}
+
+
+# ----------------------------------------------------------------------
+# From Act::Handler::Payment::Unregister
+sub unregister_user ($conference,$user_id) {
+    my $dbh = dbh();
+    my $sth = $dbh->prepare_cached(
+        "DELETE FROM participations WHERE user_id=? AND conf_id=?"
+    );
+    $sth->execute($user_id,$conference);
+    $sth->finish();
+    $dbh->commit;
+}
+
+
+# ----------------------------------------------------------------------
+# Utility: Fetch the database handler
+sub dbh {
+    # TODO: The data base handler is supposed to be stored somewhere else
+    return $Act::Config::Request{dbh};
 }
 
 1;
@@ -85,6 +104,14 @@ ten countries where most attendees come from, ordered by decreasing
 count.
 
 Used by the template where a new user fills in his details.
+
+=head2 Act::Data::unregister_user($conference,$user_id)
+
+Unregisters the user with numerical user id C<$user_id> from the
+conference C<$conference>.
+
+Note: This seems like a rather generic function.  I wonder why it
+appears in L<Act::Handler::Payment::Unregister> ??
 
 =head1 CAVEATS
 
