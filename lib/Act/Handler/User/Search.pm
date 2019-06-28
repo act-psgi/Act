@@ -3,6 +3,7 @@ use strict;
 use parent 'Act::Handler';
 
 use Act::Config;
+use Act::Data;
 use Act::Template::HTML;
 use Act::User;
 use Act::Country;
@@ -31,30 +32,21 @@ sub handler {
        $onext = $offset + $limit;
     }
 
-    my ($SQL, $sth, %seen);
+    my %seen;
 
     # fetch the countries
     my $countries = Act::Country::CountryNames();
-    $SQL = 'SELECT DISTINCT u.country FROM users u, participations p'
-         . ' WHERE u.user_id=p.user_id AND p.conf_id=? ORDER BY u.country';
-    $sth = $Request{dbh}->prepare_cached( $SQL );
-    $sth->execute( $Request{conference} );
-    %seen = ( map { $_->[0] => 1 } @{$sth->fetchall_arrayref()} );
+    %seen = ( map { $_ => 1 } @{Act::Data::countries($Request{conference})});
     $countries = [ grep { $seen{$_->{iso} } } @$countries ];
     my %by_iso = map { $_->{iso} => $_->{name} } @$countries;
 
     # fetch the monger groups
-    $SQL = 'SELECT DISTINCT u.pm_group FROM users u, participations p'
-         . ' WHERE u.user_id=p.user_id AND p.conf_id=? AND u.pm_group IS NOT NULL';
-    $sth = $Request{dbh}->prepare_cached( $SQL );
-    $sth->execute( $Request{conference} );
     %seen = ();
     my $pm_groups = [ Act::Util::usort { $_ }
                    grep !$seen{lc $_}++,
-                   map { split /\s*[^\w. -]\s*/, $_->[0] }
-                   @{$sth->fetchall_arrayref()}
+                   map { split /\s*[^\w. -]\s*/, $_ }
+                   @{Act::Data::pm_groups($Request{conference})}
                  ];
-    $sth->finish;
 
     # process the search template
     my $template = Act::Template::HTML->new();

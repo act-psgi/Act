@@ -115,6 +115,29 @@ sub remove_right ($conference,$user_id,$right_id) {
 
 
 # ----------------------------------------------------------------------
+# From Act::Handler::User::Search
+sub countries ($conference) {
+    my $dbh = dbh();
+    my $sql = 'SELECT DISTINCT u.country FROM users u, participations p'
+            . ' WHERE u.user_id=p.user_id AND p.conf_id=? ORDER BY u.country';
+    my $sth = $dbh->prepare_cached( $sql );
+    $sth->execute( $conference );
+    return [ map { $_->[0] } @{$sth->fetchall_arrayref()} ];
+}
+
+sub pm_groups ($conference) {
+    my $dbh = dbh();
+    my $sql = 'SELECT DISTINCT u.pm_group FROM users u, participations p'
+         . ' WHERE u.user_id=p.user_id AND p.conf_id=? AND u.pm_group IS NOT NULL';
+    my $sth = $dbh->prepare_cached( $sql );
+    $sth->execute( $conference );
+    my $pm_groups = [ map { $_->[0] } @{$sth->fetchall_arrayref()} ];
+    $sth->finish;
+    return $pm_groups;
+}
+
+
+# ----------------------------------------------------------------------
 # Utility: Fetch the database handler
 sub dbh {
     # TODO: The data base handler is supposed to be stored somewhere else
@@ -196,6 +219,16 @@ id C<$user_id> for the conference C<$conference>.
 
 Removes the right C<$right_id> (a string) from the user with numerical
 user id C<$user_id> for the conference C<$conference>.
+
+=head2 $ref = Act::Data::countries($conference)
+
+Returns a reference to an array of ISO country codes from where users
+have registered for this conference.
+
+=head2 $ref = Act::Data::pm_groups($conference)
+
+Returns a reference to an array of Perl mongers group names from where
+users have registered for this conference.
 
 =head1 CAVEATS
 
