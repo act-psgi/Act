@@ -47,6 +47,7 @@ sub top_ten_countries ($conference) {
 
 # ----------------------------------------------------------------------
 # From Act::Handler::Payment::Unregister
+# From Act::Handler::User::Unregister
 sub unregister_user ($conference,$user_id) {
     my $dbh = dbh();
     my $sth = $dbh->prepare_cached(
@@ -189,9 +190,6 @@ Used by the template where a new user fills in his details.
 Unregisters the user with numerical user id C<$user_id> from the
 conference C<$conference>.
 
-Note: This seems like a rather generic function.  I wonder why it
-appears in L<Act::Handler::Payment::Unregister> ??
-
 =head2 Act::Data::favourite_talks($conference)
 
 Returns an array reference to two-element array references containing
@@ -201,8 +199,6 @@ a numerical talk id and its user count, sorted by descending user count.
 
 Registers the user with numerical user id C<$user_id> for the
 conference C<$conference>.
-
-Note: This also seems like a rather generic function.
 
 =head2 $ref = Act::Data::all_rights($conference)
 
