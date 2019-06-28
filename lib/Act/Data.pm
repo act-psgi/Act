@@ -59,6 +59,19 @@ sub unregister_user ($conference,$user_id) {
 
 
 # ----------------------------------------------------------------------
+# From Act::Handler::Talk::Favorites
+sub favourite_talks ($conference) {
+    my $dbh = dbh();
+    # retrieve user_talks, most popular first
+    my $sth = $dbh->prepare_cached(
+        'SELECT talk_id, COUNT(talk_id) FROM user_talks'
+      . ' WHERE conf_id = ? GROUP BY talk_id ORDER BY count DESC');
+    $sth->execute($conference);
+    return $sth->fetchall_arrayref;
+}
+
+
+# ----------------------------------------------------------------------
 # Utility: Fetch the database handler
 sub dbh {
     # TODO: The data base handler is supposed to be stored somewhere else
@@ -112,6 +125,11 @@ conference C<$conference>.
 
 Note: This seems like a rather generic function.  I wonder why it
 appears in L<Act::Handler::Payment::Unregister> ??
+
+=head2 Act::Data::favourite_talks($conference)
+
+Returns an array reference to two-element array references containing
+a numerical talk id and its user count, sorted by descending user count.
 
 =head1 CAVEATS
 

@@ -13,12 +13,10 @@ sub handler
     my %tracks = map { $_->track_id => $_ }
             @{ Act::Track->get_tracks(conf_id => $Request{conference}) };
 
-    # retrieve user_talks, most popular first
-    my $sth = $Request{dbh}->prepare_cached(
-        'SELECT talk_id, COUNT(talk_id) FROM user_talks WHERE conf_id = ? GROUP BY talk_id ORDER BY count DESC');
-    $sth->execute( $Request{conference} );
+    my $favourite_talks = Act::Data::favourite_talks($Request{conference});
     my @favs;
-    while (my ($talk_id, $count) = $sth->fetchrow_array()) {
+    for my $fav (@$favourite_talks) {
+        my ($talk_id, $count) = @$fav;
         my $talk = Act::Talk->new(talk_id => $talk_id);
         if ($Config->talks_show_all
          || $talk->accepted
