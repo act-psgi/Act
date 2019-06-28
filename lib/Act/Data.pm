@@ -72,6 +72,19 @@ sub favourite_talks ($conference) {
 
 
 # ----------------------------------------------------------------------
+# From Act::Handler::User::Create::handler
+sub register_user ($conference,$user_id) {
+    my $dbh = dbh();
+    my $sth = $dbh->prepare_cached(
+        "INSERT INTO participations (user_id, conf_id) VALUES (?,?)"
+    );
+    $sth->execute($user_id, $conference);
+    $sth->finish();
+    $dbh->commit;
+}
+
+
+# ----------------------------------------------------------------------
 # Utility: Fetch the database handler
 sub dbh {
     # TODO: The data base handler is supposed to be stored somewhere else
@@ -130,6 +143,13 @@ appears in L<Act::Handler::Payment::Unregister> ??
 
 Returns an array reference to two-element array references containing
 a numerical talk id and its user count, sorted by descending user count.
+
+=head2 Act::Data::register_user($conference,$user_id)
+
+Registers the user with numerical user id C<$user_id> for the
+conference C<$conference>.
+
+Note: This also seems like a rather generic function.
 
 =head1 CAVEATS
 

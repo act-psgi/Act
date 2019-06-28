@@ -4,6 +4,7 @@ use parent 'Act::Handler';
 
 use Act::Config;
 use Act::Country;
+use Act::Data;
 use Act::Form;
 use Act::Template::HTML;
 use Act::User;
@@ -124,12 +125,7 @@ sub handler
 
             # create a new participation to this conference
             if( ! defined $user->participation ) {
-                my $sth = $Request{dbh}->prepare_cached(
-                    "INSERT INTO participations (user_id, conf_id) VALUES (?,?);"
-                );
-                $sth->execute($user->user_id, $Request{conference});
-                $sth->finish();
-                $Request{dbh}->commit;
+                Act::Data::register_user($Request{conference},$user->user_id);
             }
             return Act::Util::redirect(make_uri_info('user', $user->user_id))
         }
