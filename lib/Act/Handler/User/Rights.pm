@@ -3,6 +3,7 @@ use strict;
 use parent 'Act::Handler';
 
 use Act::Config;
+use Act::Data;
 use Act::Template::HTML;
 use Act::User;
 use Act::Util;
@@ -17,10 +18,7 @@ sub handler
     }
 
     # retrieve all existing rights
-    my $sth = $Request{dbh}->prepare_cached(
-        'SELECT right_id, user_id FROM rights WHERE conf_id=? ORDER BY right_id, user_id');
-    $sth->execute($Request{conference});
-    my $rights = $sth->fetchall_arrayref({});
+    my $rights = Act::Data::all_rights($Request{conference});
 
     # associated user info
     $_->{user} = Act::User->new(user_id => $_->{user_id}) for @$rights;
@@ -51,20 +49,14 @@ sub handler
                 if( $Request{args}{"$user_id-$right_id"} ) {
                     # only insert if it's new
                     if( ! $right{$user_id}{right}{$right_id} ) {
-                        $Request{dbh}->prepare_cached(
-                            'INSERT INTO rights (right_id, user_id, conf_id) VALUES (?,?,?)'
-                            )
-                            ->execute( $right_id, $right{$user_id}{user_id},
-                            $Request{conference} );
+                        Act::Data::add_right($Request{conference},
+                                             $right{$user_id}{user_id},$right_id);
                         $right{$user_id}{right}{$right_id} = 1;
                     }
                 }
                 elsif( $user_id ne 'new' ) {
-                    $Request{dbh}->prepare_cached(
-                        'DELETE FROM rights WHERE right_id=? AND user_id=? AND conf_id=?'
-                        )
-                        ->execute( $right_id, $user_id,
-                        $Request{conference} );
+                    Act::Data::remove_right($Request{conference},
+                                            $user_id,$right_id);
                     $right{$user_id}{right}{$right_id} = 0;
                 }
             }
@@ -72,8 +64,6 @@ sub handler
         # reset this user's rights cache, so that
         # any change to her rights are applied immediately
         delete $Request{user}{rights};
-
-        $Request{dbh}->commit;
 
         # add the new user properly to the hash
         if (exists $right{new}) {

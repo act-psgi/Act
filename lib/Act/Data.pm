@@ -85,6 +85,36 @@ sub register_user ($conference,$user_id) {
 
 
 # ----------------------------------------------------------------------
+# From Act::Handler::User::Rights::handler
+sub all_rights ($conference) {
+    my $dbh = dbh();
+    my $sth = $dbh->prepare_cached(
+        'SELECT right_id, user_id FROM rights'
+      . ' WHERE conf_id=? ORDER BY right_id, user_id');
+    $sth->execute($conference);
+    return $sth->fetchall_arrayref({});
+}
+
+sub add_right ($conference,$user_id,$right_id) {
+    my $dbh = dbh();
+    $dbh->prepare_cached(
+        'INSERT INTO rights (right_id, user_id, conf_id) VALUES (?,?,?)'
+    )
+    ->execute( $right_id, $user_id, $conference );
+    $dbh->commit;
+}
+
+sub remove_right ($conference,$user_id,$right_id) {
+    my $dbh = dbh();
+    $dbh->prepare_cached(
+        'DELETE FROM rights WHERE right_id=? AND user_id=? AND conf_id=?'
+    )
+    ->execute( $right_id, $user_id, $conference );
+    $dbh->commit;
+}
+
+
+# ----------------------------------------------------------------------
 # Utility: Fetch the database handler
 sub dbh {
     # TODO: The data base handler is supposed to be stored somewhere else
@@ -150,6 +180,22 @@ Registers the user with numerical user id C<$user_id> for the
 conference C<$conference>.
 
 Note: This also seems like a rather generic function.
+
+=head2 $ref = Act::Data::all_rights($conference)
+
+Returns an array reference containing hash references with the keys
+C<user_id> and C<right_id> and their corresponding values for all
+rights of all users in <$conference>.
+
+=head2 Act::Data::add_right($conference,$user_id,$right_id)
+
+Adds the right C<$right_id> (a string) to the user with numerical user
+id C<$user_id> for the conference C<$conference>.
+
+=head2 Act::Data::remove_right($conference,$user_id,$right_id)
+
+Removes the right C<$right_id> (a string) from the user with numerical
+user id C<$user_id> for the conference C<$conference>.
 
 =head1 CAVEATS
 
