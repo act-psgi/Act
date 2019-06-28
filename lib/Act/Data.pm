@@ -139,6 +139,34 @@ sub pm_groups ($conference) {
 
 
 # ----------------------------------------------------------------------
+# From Act::TwoStep
+sub store_token ($token,$email,$data) {
+    my $dbh = dbh();
+    my $sth = $dbh->prepare_cached(
+        'INSERT INTO twostep (token, email, datetime, data)'
+      . ' VALUES (?, ?, NOW(), ?)');
+    $sth->execute($token, $email, $data);
+    $dbh->commit;
+}
+
+sub delete_token ($token) {
+    my $dbh = dbh();
+    my $sth = $dbh->prepare_cached('DELETE FROM twostep WHERE token = ?');
+    $sth->execute($token);
+    $dbh->commit;
+}
+
+sub token_data ($token) {
+    my $dbh = dbh();
+    my $sth = $dbh->prepare_cached('SELECT token, data FROM twostep'
+                                  . ' WHERE token = ?');
+    $sth->execute($token);
+    my ($found, $data) = $sth->fetchrow_array();
+    $sth->finish;
+    return $found ? \$data : undef;
+}
+
+# ----------------------------------------------------------------------
 # Utility: Fetch the database handler
 sub dbh {
     # TODO: The data base handler is supposed to be stored somewhere else
@@ -225,6 +253,20 @@ have registered for this conference.
 
 Returns a reference to an array of Perl mongers group names from where
 users have registered for this conference.
+
+=head2 Act::Data::store_token(token,$email,$data)
+
+Stores an email address and twostep data together with their
+corresponding token.
+
+=head2 Act::Data::delete_token($token)
+
+Deletes the given token from the database.
+
+=head2 Act::Data::token_data($token)
+
+Returns a reference to the token data if the token C<$token> exists,
+undef otherwise.
 
 =head1 CAVEATS
 

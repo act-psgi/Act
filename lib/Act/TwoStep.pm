@@ -4,6 +4,7 @@ use strict;
 use Digest::MD5;
 
 use Act::Config;
+use Act::Data;
 use Act::Email;
 use Act::Template;
 use Act::Template::HTML;
@@ -46,9 +47,7 @@ sub create
         # store it in the database
         my $data;
         $data = $data_get->() if $data_get;
-        my $sth = $Request{dbh}->prepare_cached('INSERT INTO twostep (token, email, datetime, data) VALUES (?, ?, NOW(), ?)');
-        $sth->execute($token, $email, $data);
-        $Request{dbh}->commit;
+        Act::Data::store_token($token, $email, $data);
 
         # email it
         _send_email($email_subject_file, $email_body_file, $token, $email);
@@ -85,10 +84,7 @@ sub verify_form
 sub remove
 {
     my $token = shift;
-
-    my $sth = $Request{dbh}->prepare_cached('DELETE FROM twostep WHERE token = ?');
-    $sth->execute($token);
-    $Request{dbh}->commit;
+    Act::Data::delete_token($token);
 }
 
 # display the twostep form
@@ -106,12 +102,7 @@ sub _display_form
 sub _exists
 {
     my $token = shift;
-
-    my $sth = $Request{dbh}->prepare_cached('SELECT token, data FROM twostep WHERE token = ?');
-    $sth->execute($token);
-    my ($found, $data) = $sth->fetchrow_array();
-    $sth->finish;
-    return $found ? \$data : undef;
+    return Act::Data::token_data($token);
 }
 
 # create a new token
