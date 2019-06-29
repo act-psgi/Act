@@ -5,6 +5,10 @@ use 5.020;
 use feature qw(signatures);
 no warnings qw(experimental::signatures);
 
+# ======================================================================
+# The first bunch of queries all have the conference as a parameter.
+# TODO: Consider making them part of a conference object
+
 # ----------------------------------------------------------------------
 # From Act::Config::get_config
 sub current_attendee_count ($conference,$is_free) {
@@ -138,6 +142,11 @@ sub pm_groups ($conference) {
 }
 
 
+# ======================================================================
+# The following queries are not bound to one conference.  There are
+# two "global" services: The user service (including authentication
+# and authorization) and the database service.
+
 # ----------------------------------------------------------------------
 # From Act::TwoStep
 sub store_token ($token,$email,$data) {
@@ -167,7 +176,7 @@ sub token_data ($token) {
 }
 
 # ----------------------------------------------------------------------
-# Utility: Fetch the database handler
+# Fetch the database handler
 sub dbh {
     # TODO: The data base handler is supposed to be stored somewhere else
     return $Act::Config::Request{dbh};
@@ -196,16 +205,34 @@ files and the database as its sources of persistent data.  This is not
 a class (yet), just a collection of subroutines to get an overview
 which interfaces are used.
 
+As it turns out, there are three categories of subroutines:
+
+=over
+
+=item 1. Queries for one conference
+
+=item 2. Queries about users, independent of conferences
+
+=item 3. Infrastructure utilities (where's my database handle?)
+
+=back
+
+This seems to be the natural source to define the "layers" for Act, as
+outlined by BooK in the Act-Voyager project (I'm too lazy to dig for
+the URL, sorry).
+
 =head1 SUBROUTINES
 
-=head2 $count = Act::Data::current_attendee_count($conference,$is_free)
+=head2 Queries for one conference
+
+=head3 $count = Act::Data::current_attendee_count($conference,$is_free)
 
 Returns the number of registered users.  For a conference which isn't
 free of charge, only users which have either submitted a talk which
 was accepted, or have some rights, or have paid, are counted towards
 the maximum number of attendees from the configuration.
 
-=head2 $iso_ref = Act::Data::top_ten_countries($conference);
+=head3 $iso_ref = Act::Data::top_ten_countries($conference);
 
 Returns a reference to an array containing ISO country codes for the
 ten countries where most attendees come from, ordered by decreasing
@@ -213,57 +240,59 @@ count.
 
 Used by the template where a new user fills in his details.
 
-=head2 Act::Data::unregister_user($conference,$user_id)
+=head3 Act::Data::unregister_user($conference,$user_id)
 
 Unregisters the user with numerical user id C<$user_id> from the
 conference C<$conference>.
 
-=head2 Act::Data::favourite_talks($conference)
+=head3 Act::Data::favourite_talks($conference)
 
 Returns an array reference to two-element array references containing
 a numerical talk id and its user count, sorted by descending user count.
 
-=head2 Act::Data::register_user($conference,$user_id)
+=head3 Act::Data::register_user($conference,$user_id)
 
 Registers the user with numerical user id C<$user_id> for the
 conference C<$conference>.
 
-=head2 $ref = Act::Data::all_rights($conference)
+=head3 $ref = Act::Data::all_rights($conference)
 
 Returns an array reference containing hash references with the keys
 C<user_id> and C<right_id> and their corresponding values for all
 rights of all users in <$conference>.
 
-=head2 Act::Data::add_right($conference,$user_id,$right_id)
+=head3 Act::Data::add_right($conference,$user_id,$right_id)
 
 Adds the right C<$right_id> (a string) to the user with numerical user
 id C<$user_id> for the conference C<$conference>.
 
-=head2 Act::Data::remove_right($conference,$user_id,$right_id)
+=head3 Act::Data::remove_right($conference,$user_id,$right_id)
 
 Removes the right C<$right_id> (a string) from the user with numerical
 user id C<$user_id> for the conference C<$conference>.
 
-=head2 $ref = Act::Data::countries($conference)
+=head3 $ref = Act::Data::countries($conference)
 
 Returns a reference to an array of ISO country codes from where users
 have registered for this conference.
 
-=head2 $ref = Act::Data::pm_groups($conference)
+=head3 $ref = Act::Data::pm_groups($conference)
 
 Returns a reference to an array of Perl mongers group names from where
 users have registered for this conference.
 
-=head2 Act::Data::store_token(token,$email,$data)
+=head2 Queries about users
+
+=head3 Act::Data::store_token(token,$email,$data)
 
 Stores an email address and twostep data together with their
 corresponding token.
 
-=head2 Act::Data::delete_token($token)
+=head3 Act::Data::delete_token($token)
 
 Deletes the given token from the database.
 
-=head2 Act::Data::token_data($token)
+=head3 Act::Data::token_data($token)
 
 Returns a reference to the token data if the token C<$token> exists,
 undef otherwise.
