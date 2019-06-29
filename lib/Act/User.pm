@@ -4,6 +4,7 @@ use base qw( Act::Object );
 
 use Act::Config;
 use Act::Country;
+use Act::Data;
 use Act::Object;
 use Act::Talk;
 use Act::Util;
@@ -126,30 +127,12 @@ sub talks {
 sub register_participation {
   my ( $self ) = @_;
 
-  my $sth = $Request{dbh}->prepare_cached(q{
-        SELECT  tshirt_size
-        FROM    participations
-        WHERE   user_id = ?
-        AND tshirt_size is not null
-        ORDER BY datetime DESC
-        LIMIT 1
-  });
-
-  $sth->execute( $self->user_id );
-  my ($tshirt_size) = $sth->fetchrow_array;
-  $sth->finish;
-
+  my $tshirt_size = Act::Data::tshirt_size( $self->user_id );
   # create a new participation to this conference
-  $sth = $Request{dbh}->prepare_cached(q{
-        INSERT INTO participations
-          (user_id, conf_id, datetime, ip, tshirt_size)
-        VALUES  (?,?, NOW(), ?, ?)
-  });
-
-  $sth->execute($self->user_id, $Request{conference},
-    $Request{r}->address, $tshirt_size);
-  $sth->finish();
-  $Request{dbh}->commit;
+  Act::Data::register_participation(
+      $Request{conference},$self->user_id,
+      $Request{r}->address, $tshirt_size
+  );
 }
 
 sub participation {

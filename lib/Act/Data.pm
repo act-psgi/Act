@@ -78,7 +78,7 @@ sub favourite_talks ($conference) {
 
 # ----------------------------------------------------------------------
 # From Act::Handler::User::Create::handler
-sub register_user ($conference,$user_id) {
+sub register_user ($conference,$user_id ) {
     my $dbh = dbh();
     my $sth = $dbh->prepare_cached(
         "INSERT INTO participations (user_id, conf_id) VALUES (?,?)"
@@ -88,6 +88,22 @@ sub register_user ($conference,$user_id) {
     $dbh->commit;
 }
 
+
+# ----------------------------------------------------------------------
+# From Act::User
+sub register_participation ($conference,$user_id,$address,$tshirt_size) {
+    my $dbh = dbh();
+    # create a new participation to this conference
+    my $sth = $dbh->prepare_cached(q{
+        INSERT INTO participations
+          (user_id, conf_id, datetime, ip, tshirt_size)
+        VALUES  (?,?, NOW(), ?, ?)
+    });
+    $sth->execute($user_id, $conference,
+    $address, $tshirt_size);
+    $sth->finish();
+    $dbh->commit;
+}
 
 # ----------------------------------------------------------------------
 # From Act::Handler::User::Rights::handler
@@ -175,6 +191,25 @@ sub token_data ($token) {
     return $found ? \$data : undef;
 }
 
+
+# ----------------------------------------------------------------------
+# From Act::User::register_participation
+sub tshirt_size ($user_id) {
+    my $dbh = dbh();
+    my $sth = $dbh->prepare_cached(q{
+        SELECT  tshirt_size
+        FROM    participations
+        WHERE   user_id = ?
+        AND tshirt_size is not null
+        ORDER BY datetime DESC
+        LIMIT 1
+    });
+    $sth->execute( $user_id );
+    my ($tshirt_size) = $sth->fetchrow_array;
+    $sth->finish;
+    return $tshirt_size;
+}
+
 # ----------------------------------------------------------------------
 # Fetch the database handler
 sub dbh {
@@ -255,6 +290,14 @@ a numerical talk id and its user count, sorted by descending user count.
 Registers the user with numerical user id C<$user_id> for the
 conference C<$conference>.
 
+=head3 Act::Data::register_participation($conference,$user_id,$addr,$size)
+
+Registers the user with numerical user id C<$user_id> for the
+conference C<$conference>, supplying also the IP address of the caller
+and the user's T-shirt size.
+
+B<Note:> This is highly suspicious.
+
 =head3 $ref = Act::Data::all_rights($conference)
 
 Returns an array reference containing hash references with the keys
@@ -296,6 +339,14 @@ Deletes the given token from the database.
 
 Returns a reference to the token data if the token C<$token> exists,
 undef otherwise.
+
+=head3 Act::Data::tshirt_size($user)
+
+Returns the most recently T-shirt size entered by a user, regardless
+of conference.
+
+B<Note:> This routine needs to be checked closely.  It breaks the
+segregation of duties between the provider and the organizers.
 
 =head1 CAVEATS
 
