@@ -137,25 +137,16 @@ sub register_participation {
 
 sub participation {
     my ( $self ) = @_;
-    my $sth = sql('SELECT * FROM participations p WHERE p.user_id=? AND p.conf_id=?',
-                  $self->user_id, $Request{conference} );
-    my $participation = $sth->fetchrow_hashref();
-    $sth->finish();
-    return $participation;
+    return Act::Data::participation($Request{conference},$self->user_id);
 }
 
 sub my_talks {
     my ($self) = @_;
     return $self->{my_talks} if $self->{my_talks};
-    my $sth = sql(<<EOF, $self->user_id, $Request{conference} );
-SELECT u.talk_id FROM user_talks u, talks t
-WHERE u.user_id=? AND u.conf_id=?
-AND   u.talk_id = t.talk_id
-AND   t.accepted
-EOF
-    my $talk_ids = $sth->fetchall_arrayref();
-    $sth->finish();
-    return $self->{my_talks} = [ map Act::Talk->new( talk_id => $_->[0] ), @$talk_ids ];
+    my $talk_ids = Act::Data::my_talk_ids($Request{conference},
+                                       $self->user_id);
+    my @my_talks = map { Act::Talk->new( talk_id => $_) } @$talk_ids;
+    return $self->{my_talks} = \@my_talks;
 }
 
 sub update_my_talks {
@@ -165,24 +156,11 @@ sub update_my_talks {
     my %current = map { $_->talk_id => 1 } @{ $self->my_talks };
 
     # remove talks
-    my @remove = grep { !$ids{$_} } keys %current;
-    if (@remove) {
-        sql(
-                    "DELETE FROM user_talks WHERE user_id = ? AND conf_id = ? AND talk_id IN ("
-                  .  join(',', map '?',@remove)
-                  . ')',
-                  $self->user_id, $Request{conference}, @remove
-           );
-    }
-    # add talks
-    my @add = grep { !$current{$_} } keys %ids;
-    if (@add) {
-        my $SQL = "INSERT INTO user_talks VALUES (?,?,?)";
-        my $sth = sql_prepare($SQL);
-        sql_exec($sth, $SQL, $self->user_id, $Request{conference}, $_)
-            for @add;
-    }
-    $Request{dbh}->commit  if @add || @remove;
+    my @remove = grep { !$ids{$_} }     keys %current;
+    my @add    = grep { !$current{$_} } keys %ids;
+    Act::Data::update_my_talks($Request{conference},$self->user_id,
+                               \@remove,\@add);
+
     $self->{my_talks} = [ grep $_->accepted, @talks ];
 }
 
@@ -193,57 +171,56 @@ sub is_my_talk {
 
 sub attendees {
     my ($self, $talk_id) = @_;
-    my $sth = sql(<<EOF, $talk_id, $Request{conference} );
-SELECT user_id FROM user_talks
-WHERE talk_id=? AND conf_id=?
-EOF
-    my $user_ids = $sth->fetchall_arrayref();
-    $sth->finish();
-    return [ map Act::User->new( user_id => $_->[0] ), @$user_ids ];
+    my $user_ids = Act::Data::attendees($Request{conference},$talk_id);
+    return [ map Act::User->new( user_id => $_ ), @$user_ids ];
 }
 
 # some data related to the visited conference (if any)
-my %methods = (
-    has_talk => [
-        "SELECT count(*) FROM talks t WHERE t.user_id=? AND t.conf_id=?",
-        sub { ( $_[0]->user_id, $Request{conference} ) },
-    ],
-    has_accepted_talk => [
-        "SELECT count(*) FROM talks t WHERE t.user_id=? AND t.conf_id=? AND t.accepted",
-        sub { ( $_[0]->user_id, $Request{conference} ) },
-    ],
-    has_paid  => [
-        "SELECT count(*) FROM orders o, order_items i
-            WHERE o.user_id=? AND o.conf_id=?
-              AND o.status = ?
-              AND o.order_id = i.order_id
-              AND i.registration",
-        sub { ( $_[0]->user_id, $Request{conference}, 'paid' ) },
-    ],
-    has_registered => [
-        'SELECT count(*) FROM participations p WHERE p.user_id=? AND p.conf_id=?',
-        sub { ( $_[0]->user_id, $Request{conference} ) },
-    ],
-    has_attended => [
-        'SELECT count(*) FROM participations p WHERE p.user_id=? AND p.conf_id=? AND p.attended IS TRUE',
-        sub { ( $_[0]->user_id, $Request{conference} ) },
-    ],
-);
-
-for my $meth (keys %methods) {
-    no strict 'refs';
-
-    *{$meth} = sub {
-        my $self = shift;
-        return $self->{$meth} if exists $self->{$meth};
-        # compute the data
-        my ($sql, $getargs) = @{ $methods{$meth} };
-        my $sth = sql( $sql, $getargs->($self) );
-        $self->{$meth} = $sth->fetchrow_arrayref()->[0];
-        $sth->finish();
-        return $self->{$meth};
-    };
+sub has_talk {
+    my $self = shift;
+    return $self->{has_talk}  if  exists $self->{has_talk};
+    my $has_talk = Act::Data::has_talk($Request{conference},$self->user_id);
+    $self->{has_talk} = $has_talk;
+    return $has_talk;
 }
+
+sub has_accepted_talk {
+    my $self = shift;
+    return $self->{has_accepted_talk}
+        if  exists $self->{has_accepted_talk};
+    my $has_accepted_talk = Act::Data::has_accepted_talk(
+        $Request{conference},$self->user_id);
+    $self->{has_accepted_talk} = $has_accepted_talk;
+    return $has_accepted_talk;
+}
+
+sub has_paid {
+    my $self = shift;
+    return $self->{has_paid} if $self->{has_paid};
+    my $has_paid = Act::Data::has_paid(
+        $Request{conference},$self->user_id);
+    $self->{has_paid} = $has_paid;
+    return $has_paid;
+}
+
+sub has_registered {
+    my $self = shift;
+    return $self->{has_registered} if $self->{has_registered};
+    my $has_registered = Act::Data::has_registered(
+        $Request{conference},$self->user_id);
+    $self->{has_registered} = $has_registered;
+    return $has_registered;
+}
+
+sub has_attended {
+    my $self = shift;
+    return $self->{has_attended} if $self->{has_attended};
+    my $has_attended = Act::Data::has_attended(
+        $Request{conference},$self->user_id);
+    $self->{has_attended} = $has_attended;
+    return $has_attended;
+}
+
 sub committed {
     my $self = shift;
     return $self->has_paid
@@ -257,14 +234,7 @@ sub committed {
 }
 
 sub participations {
-     my $sth = sql(
-        "SELECT * FROM participations p WHERE p.user_id=?",
-         $_[0]->user_id );
-     my $participations = [];
-     while( my $p = $sth->fetchrow_hashref() ) {
-         push @$participations, $p;
-     }
-     return $participations;
+     return Act::Data::participations($_[0]->user_id);
 }
 
 sub conferences {
@@ -311,11 +281,7 @@ sub create {
         if defined $password;
     my $user = $class->SUPER::create(%args);
     if ($user && $part && $Request{conference}) {
-        @$part{qw(conf_id user_id)} = ($Request{conference}, $user->{user_id});
-        my $SQL = sprintf "INSERT INTO participations (%s) VALUES (%s);",
-                          join(",", keys %$part), join(",", ( "?" ) x keys %$part);
-        my $sth = sql( $SQL, values %$part );
-        $Request{dbh}->commit;
+        Act::Data::register_user($Request{conference}, $user->{user_id});
     }
     return $user;
 }

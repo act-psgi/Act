@@ -78,6 +78,7 @@ sub favourite_talks ($conference) {
 
 # ----------------------------------------------------------------------
 # From Act::Handler::User::Create::handler
+# From Act::User::create
 sub register_user ($conference,$user_id ) {
     my $dbh = dbh();
     my $sth = $dbh->prepare_cached(
@@ -158,10 +159,128 @@ sub pm_groups ($conference) {
 }
 
 
+# ----------------------------------------------------------------------
+# From Act::User::participation
+sub participation ($conference,$user_id) {
+    my $sth = sql('SELECT * FROM participations p'
+                . ' WHERE p.user_id=? AND p.conf_id=?',
+                  $user_id, $conference );
+    my $participation = $sth->fetchrow_hashref();
+    $sth->finish();
+    return $participation;
+}
+
+
+# ----------------------------------------------------------------------
+# From Act::User::my_talks
+sub my_talk_ids ($conference,$user_id) {
+    my $sth = sql(<<EOF, $user_id, $conference);
+SELECT u.talk_id FROM user_talks u, talks t
+WHERE u.user_id=? AND u.conf_id=?
+AND   u.talk_id = t.talk_id
+AND   t.accepted
+EOF
+    my $talk_ids = $sth->fetchall_arrayref();
+    $sth->finish();
+    return [ map { $_->[0] } @$talk_ids ];
+}
+
+# From Act::User::update_my_talks
+sub update_my_talks ($conference,$user_id,$remove_list,$add_list) {
+    if (@$remove_list) {
+        sql(
+            'DELETE FROM user_talks'
+                . ' WHERE user_id = ? AND conf_id = ?'
+                . ' AND talk_id IN ('
+                .  join(',', map '?',@$remove_list)
+                . ')',
+            $user_id, $conference, @$remove_list
+        );
+    }
+
+    if (@$add_list) {
+        my $sql = "INSERT INTO user_talks VALUES (?,?,?)";
+        my $sth = sql_prepare($sql);
+        sql_exec($sth, $sql, $user_id, $conference, $_)
+            for @$add_list;
+    }
+
+    dbh()->commit  if  @$remove_list || @$add_list;
+}
+
+# From Act::User::attendees
+sub attendees ($conference,$talk_id) {
+    my $sth = sql(<<EOF, $talk_id, $conference);
+SELECT user_id FROM user_talks
+WHERE talk_id=? AND conf_id=?
+EOF
+    my $user_ids = $sth->fetchall_arrayref();
+    $sth->finish();
+    return [ map { $_->[0] } @$user_ids ];
+}
+
+
+# ======================================================================
+# Some queries consistently have a conference and a user id as
+# parameters (TODO: Check the list from above for more of them).  This
+# looks like there's enough motivation for a class "Act::Visitor" or
+# something like that.
+
+# ----------------------------------------------------------------------
+# From Act::User
+sub has_talk ($conference,$user_id) {
+    my $sql = 'SELECT count(*) FROM talks t' .
+              ' WHERE t.user_id=? AND t.conf_id=?';
+    my $sth = sql($sql, $user_id, $conference);
+    my $has_talk = $sth->fetchrow_arrayref()->[0];
+    $sth->finish;
+    return $has_talk;
+}
+
+sub has_accepted_talk ($conference,$user_id) {
+    my $sql = 'SELECT count(*) FROM talks t' .
+              ' WHERE t.user_id=? AND t.conf_id=? AND t.accepted';
+    my $sth = sql($sql, $user_id, $conference);
+    my $has_accepted_talk = $sth->fetchrow_arrayref()->[0];
+    $sth->finish;
+    return $has_accepted_talk;
+}
+
+sub has_paid ($conference,$user_id) {
+    my $sql = "SELECT count(*) FROM orders o, order_items i
+            WHERE o.user_id=? AND o.conf_id=?
+              AND o.status = ?
+              AND o.order_id = i.order_id
+              AND i.registration";
+    my $sth = sql($sql, $user_id, $conference, 'paid');
+    my $has_paid = $sth->fetchrow_arrayref()->[0];
+    $sth->finish;
+    return $has_paid;
+}
+
+sub has_registered ($conference,$user_id) {
+    my $sql = 'SELECT count(*) FROM participations p'
+            . ' WHERE p.user_id=? AND p.conf_id=?';
+    my $sth = sql($sql, $user_id, $conference);
+    my $has_registered = $sth->fetchrow_arrayref()->[0];
+    $sth->finish;
+    return $has_registered;
+}
+
+sub has_attended ($conference,$user_id) {
+    my $sql = 'SELECT count(*) FROM participations p'
+            . ' WHERE p.user_id=? AND p.conf_id=? AND p.attended IS TRUE';
+    my $sth = sql($sql, $user_id, $conference);
+    my $has_attended = $sth->fetchrow_arrayref()->[0];
+    $sth->finish;
+    return $has_attended;
+}
+
+
 # ======================================================================
 # The following queries are not bound to one conference.  There are
 # two "global" services: The user service (including authentication
-# and authorization) and the database service.
+# and authorization) and the database ("infrastructure") service.
 
 # ----------------------------------------------------------------------
 # From Act::TwoStep
@@ -210,6 +329,20 @@ sub tshirt_size ($user_id) {
     return $tshirt_size;
 }
 
+
+# ----------------------------------------------------------------------
+# From Act::User
+sub participations ($user_id) {
+     my $sth = sql(
+        "SELECT * FROM participations p WHERE p.user_id=?",
+         $user_id );
+     my $participations = [];
+     while( my $p = $sth->fetchrow_hashref() ) {
+         push @$participations, $p;
+     }
+     return $participations;
+}
+
 # ----------------------------------------------------------------------
 # Fetch the database handler
 sub dbh {
@@ -217,6 +350,27 @@ sub dbh {
     return $Act::Config::Request{dbh};
 }
 
+# ----------------------------------------------------------------------
+# Adopted from Act::Object
+sub sql_prepare
+{
+    my ($sql) = @_;
+    return dbh()->prepare_cached($sql);
+}
+
+sub sql_exec
+{
+    my ($sth, $sql, @params) = @_;
+    $sth->execute(@params);
+}
+
+sub sql
+{
+    my ($sql, @params) = @_;
+    my $sth = sql_prepare($sql);
+    sql_exec($sth, $sql, @params);
+    return $sth;
+}
 1;
 
 __END__
@@ -298,6 +452,29 @@ and the user's T-shirt size.
 
 B<Note:> This is highly suspicious.
 
+=head3 $participation = Act::Data::participation($conference,$user)
+
+Returns a hash reference containing key/value pairs for the whatever
+is in the database for that C<$conference> and that C<$user>:
+
+=over
+
+=item * C<conf_id> - The conference id
+
+=item * C<user_id> - The numerical user id
+
+=item * C<tshirt_size> - The size for the user's T-Shirt
+
+=item * C<nb_family> - How many additional people the user brings to the social event
+
+=item * C<datetime> - Time of registration by the user
+
+=item * C<IP> - The IP address of the user's registration
+
+=item * C<attended> - User has confirmed his attendance
+
+=back
+
 =head3 $ref = Act::Data::all_rights($conference)
 
 Returns an array reference containing hash references with the keys
@@ -324,6 +501,33 @@ have registered for this conference.
 Returns a reference to an array of Perl mongers group names from where
 users have registered for this conference.
 
+=head3 $ref = Act::Data::my_talk_ids($conference,$user_id)
+
+Returns a reference to an array which holds the numerical ids for
+each accepted talk by the user with numeric user id C<user_id> for the
+conference C<$conference>.
+
+=head3 Act::Data::update_my_talks($conference,$user_id,$remove_list,$add_list)
+
+The parameters C<$remove_list> and C<$add_list> are references to
+lists of talk ids which are to be removed from the given
+C<$conference> and numerical C<$user_id>.
+
+=head3 User Flags: has_talk, has_accepted_talk, has_paid, has_registered, has_attended
+
+All these functions accept a conference and a numeric user id as
+parameters and return a boolean.
+
+In legacy Act, the code for these functions was generated on-the-fly.
+Here they are expanded, incurring some violation of
+Don't-Repeat-Yourself.  Eventually they might end up as lazily
+evaluated attributes of a yet-to-be-written class Act::Visitor.
+
+=head3 Act::Data::attendees($conference,$talk_id)
+
+Returns a reference to an array holding the numerical user ids of
+users who announced to attend the talk C<$talk_id> at C<$conference>.
+
 =head2 Queries about users
 
 =head3 Act::Data::store_token(token,$email,$data)
@@ -335,18 +539,26 @@ corresponding token.
 
 Deletes the given token from the database.
 
-=head3 Act::Data::token_data($token)
+=head3 $token = Act::Data::token_data($token)
 
 Returns a reference to the token data if the token C<$token> exists,
 undef otherwise.
 
-=head3 Act::Data::tshirt_size($user)
+=head3 $size = Act::Data::tshirt_size($user)
 
 Returns the most recently T-shirt size entered by a user, regardless
 of conference.
 
 B<Note:> This routine needs to be checked closely.  It breaks the
 segregation of duties between the provider and the organizers.
+
+=head3 $pref = Act::Data::participations($user_id)
+
+Returns a reference to a list of hash references, each containing
+key/value pairs for whatever the database contains.  See
+C<participation> for the keys.
+
+B<Note:> This function has to be re-considered under GDPR.
 
 =head1 CAVEATS
 
