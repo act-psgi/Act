@@ -295,31 +295,11 @@ sub update {
     $self->SUPER::update(%args) if %args;
     if ($part && $Request{conference}) {
         delete $part->{$_} for qw(conf_id user_id);
-        my $SQL = sprintf 'UPDATE participations SET %s WHERE conf_id=? AND user_id=?',
-                          join(',', map "$_=?", keys %$part);
-        my $sth = sql( $SQL, values %$part, $Request{conference}, $self->{user_id} );
-        $Request{dbh}->commit;
+        Act::Data::update_participation($Request{conference},
+                                        $self->{user_id},
+                                        %$part);
     }
-    if( $bio ) {
-        my @SQL =
-        (
-            "SELECT 1 FROM bios WHERE user_id=? AND lang=?",
-            "UPDATE bios SET bio=? WHERE user_id=? AND lang=?",
-            "INSERT INTO bios ( bio, user_id, lang) VALUES (?, ?, ?)",
-        );
-        my @sth = map sql_prepare($_), @SQL;
-        for my $lang ( keys %$bio ) {
-            sql_exec( $sth[0], $SQL[0], $self->user_id, $lang );
-            if( $sth[0]->fetchrow_arrayref ) {
-                sql_exec(  $sth[1], $SQL[1], $bio->{$lang}, $self->user_id, $lang );
-            }
-            else {
-                sql_exec( $sth[2], $SQL[2],  $bio->{$lang}, $self->user_id, $lang );
-            }
-            $sth[0]->finish;
-            $Request{dbh}->commit;
-        }
-    }
+    $bio  and  Act::Data::update_bio($self->{user_id},$bio);
 }
 
 sub possible_duplicates {

@@ -106,6 +106,28 @@ sub register_participation ($conference,$user_id,$address,$tshirt_size) {
     $dbh->commit;
 }
 
+
+# ----------------------------------------------------------------------
+# From Act::User::participation
+sub participation ($conference,$user_id) {
+    my $sth = sql('SELECT * FROM participations p'
+                . ' WHERE p.user_id=? AND p.conf_id=?',
+                  $user_id, $conference );
+    my $participation = $sth->fetchrow_hashref();
+    $sth->finish();
+    return $participation;
+}
+
+
+# ----------------------------------------------------------------------
+# From Act::User::update
+sub update_participation ($conference,$user_id,%fields) {
+    my $sql = sprintf 'UPDATE participations SET %s WHERE conf_id=? AND user_id=?',
+        join(',', map "$_=?", keys %fields);
+    my $sth = sql( $sql, values %fields, $conference, $user_id );
+    dbh()->commit;
+}
+
 # ----------------------------------------------------------------------
 # From Act::Handler::User::Rights::handler
 sub all_rights ($conference) {
@@ -156,18 +178,6 @@ sub pm_groups ($conference) {
     my $pm_groups = [ map { $_->[0] } @{$sth->fetchall_arrayref()} ];
     $sth->finish;
     return $pm_groups;
-}
-
-
-# ----------------------------------------------------------------------
-# From Act::User::participation
-sub participation ($conference,$user_id) {
-    my $sth = sql('SELECT * FROM participations p'
-                . ' WHERE p.user_id=? AND p.conf_id=?',
-                  $user_id, $conference );
-    my $participation = $sth->fetchrow_hashref();
-    $sth->finish();
-    return $participation;
 }
 
 
@@ -331,6 +341,30 @@ sub tshirt_size ($user_id) {
 
 
 # ----------------------------------------------------------------------
+# From Act::User::update
+sub update_bio ($user_id,$bio) {
+    my @sql =
+        (
+            "SELECT 1 FROM bios WHERE user_id=? AND lang=?",
+            "UPDATE bios SET bio=? WHERE user_id=? AND lang=?",
+            "INSERT INTO bios ( bio, user_id, lang) VALUES (?, ?, ?)",
+        );
+    my @sth = map sql_prepare($_), @sql;
+    for my $lang ( keys %$bio ) {
+        sql_exec( $sth[0], $sql[0], $user_id, $lang );
+        if( $sth[0]->fetchrow_arrayref ) {
+            sql_exec(  $sth[1], $sql[1], $bio->{$lang}, $user_id, $lang );
+        }
+        else {
+            sql_exec( $sth[2], $sql[2],  $bio->{$lang}, $user_id, $lang );
+        }
+        $sth[0]->finish;
+        dbh()->commit;
+    }
+}
+
+
+# ----------------------------------------------------------------------
 # From Act::User
 sub participations ($user_id) {
      my $sth = sql(
@@ -457,6 +491,11 @@ B<Note:> This is highly suspicious.
 Returns a hash reference containing key/value pairs for the whatever
 is in the database for that C<$conference> and that C<$user>:
 
+=head3 Act::Data::update_participation($conference,$user_id,%fields)
+
+Updates the participation data of the visitor with whatever is in
+C<%fields>.
+
 =over
 
 =item * C<conf_id> - The conference id
@@ -551,6 +590,11 @@ of conference.
 
 B<Note:> This routine needs to be checked closely.  It breaks the
 segregation of duties between the provider and the organizers.
+
+=head3 Act::Data::update_bio($user_id,$bio)
+
+Updates a user's biography, or biographies.  C<$bio> is a reference to
+a hash where the keys are the languages of the biography.
 
 =head3 $pref = Act::Data::participations($user_id)
 
