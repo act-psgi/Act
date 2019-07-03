@@ -1,6 +1,7 @@
 package Act::News;
 use strict;
 use Act::Config;
+use Act::Data;
 use Act::Object;
 use base qw( Act::Object );
 
@@ -28,13 +29,7 @@ sub items
     return $self->{items} if exists $self->{items};
 
     # fill the cache if necessary
-    my $sth = sql("SELECT lang, title, text FROM news_items WHERE news_id = ?", $self->news_id);
-
-    $self->{items} = {};
-    while( my ($lang, $title, $text) = $sth->fetchrow_array() ) {
-        $self->{items}{$lang} = { title => $title, text => $text };
-    }
-    $sth->finish();
+    $self->{items} = Act::Data::fetch_news($self->news_id);
     return $self->{items};
 }
 
@@ -76,13 +71,7 @@ sub delete {
 sub _update_items
 {
     my ($self, $items) = @_;
-
-    sql('DELETE FROM news_items WHERE news_id=?', $self->news_id);
-
-    for my $lang (keys %$items) {
-        sql('INSERT INTO news_items ( title, text, news_id, lang ) VALUES (?, ?, ?, ?)',
-            $items->{$lang}{title}, $items->{$lang}{text}, $self->news_id, $lang );
-    }
+    Act::Data::update_news($self->news_id,$items);
 }
 =head1 NAME
 

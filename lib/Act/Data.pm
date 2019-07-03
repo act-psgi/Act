@@ -396,6 +396,33 @@ sub participations ($user_id) {
      return $participations;
 }
 
+
+# ----------------------------------------------------------------------
+# From Act::News
+# The following queries doesn't technically pass a conference, but news
+# (and their identifiers) are conference specific data.
+sub fetch_news ($news_id) {
+    my $sth = sql('SELECT lang, title, text FROM news_items'
+                . ' WHERE news_id = ?', $news_id);
+    my $ref = $sth->fetchall_arrayref;
+    my $items = { map {
+        my ($lang, $title, $text) = @$_;
+        $lang => { title => $title, text => $text }
+    } @$ref };
+    $sth->finish;
+    return $items;
+}
+
+sub update_news($news_id,$items) {
+    sql('DELETE FROM news_items WHERE news_id=?', $news_id);
+    for my $lang (keys %$items) {
+        sql('INSERT INTO news_items ( title, text, news_id, lang )'
+          . ' VALUES (?, ?, ?, ?)',
+            $items->{$lang}{title}, $items->{$lang}{text}, $news_id, $lang );
+    }
+}
+
+
 # ----------------------------------------------------------------------
 # Fetch the database handler
 sub dbh {
@@ -622,6 +649,27 @@ key/value pairs for whatever the database contains.  See
 C<participation> for the keys.
 
 B<Note:> This function has to be re-considered under GDPR.
+
+=head3 $items = Act::Data::fetch_news($news_id)
+
+Returns a hash reference where the keys are languages and the values
+in turn are hash references with keys C<title> and C<text> for the
+corresponding language.
+
+This function isn't explicitly conference specific, but since news ids
+are assigned per conference, every news item belongs to exactly one
+conference.
+
+=head3 Act::Data::update_news($news_id,$items)
+
+Takes a hash reference C<$items> as defined in the previous section
+and uses it to replace the news item with identifier C<$news_id>.
+
+This function isn't explicitly conference specific, but since news ids
+are assigned per conference, every news item belongs to exactly one
+conference.
+
+B<Note:> This function I<does not commit changes to the database.>
 
 =head1 CAVEATS
 
