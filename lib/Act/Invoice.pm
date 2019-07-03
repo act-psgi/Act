@@ -22,20 +22,11 @@ our %sql_opts;
 
 sub create {
     my ($class, %args ) = @_;
-    
+
     $args{datetime} = DateTime->now();
-    
+
     # get next invoice number for this conference
-    my $sth = sql("SELECT next_num FROM invoice_num WHERE conf_id=?", $Request{conference});
-    ($args{invoice_no}) = $sth->fetchrow_array;
-    $sth->finish;
-    if ($args{invoice_no}) {
-        sql("UPDATE invoice_num SET next_num=next_num+1 WHERE conf_id=?", $Request{conference});
-    }
-    else {
-        sql("INSERT INTO invoice_num (conf_id, next_num) VALUES (?,?)", $Request{conference}, 2);
-        $args{invoice_no} = 1;
-    }
+    $args{invoice_no} = Act::Data::next_invoice_num($Request{conference});
     return $class->SUPER::create(%args);
 }
 sub update {

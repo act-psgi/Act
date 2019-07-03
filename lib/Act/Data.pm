@@ -288,6 +288,25 @@ sub has_attended ($conference,$user_id) {
 
 
 # ======================================================================
+# Queries not bound to one user
+sub next_invoice_num ($conference) {
+    my $sth = sql("SELECT next_num FROM invoice_num WHERE conf_id=?", $conference);
+    my ($invoice_no) =  $sth->fetchrow_array;
+    $sth->finish;
+
+    if ($invoice_no) {
+        sql('UPDATE invoice_num SET next_num=next_num+1'
+          . ' WHERE conf_id=?', $conference);
+    }
+    else {
+        sql("INSERT INTO invoice_num (conf_id, next_num) VALUES (?,?)",
+            $conference, 2);
+        $invoice_no = 1;
+    }
+    return $invoice_no;
+}
+
+# ======================================================================
 # The following queries are not bound to one conference.  There are
 # two "global" services: The user service (including authentication
 # and authorization) and the database ("infrastructure") service.
