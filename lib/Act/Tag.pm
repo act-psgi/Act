@@ -59,29 +59,14 @@ sub update_tags
 sub find_tagged
 {
     my ($class, %args) = @_;
-    my @tags = @{ $args{tags} };
-    my $sth = sql(
-              'SELECT DISTINCT tagged_id FROM tags'
-            . ' WHERE conf_id = ? AND type = ?'
-            . ' AND tag IN (' . join(',', ('?') x @tags) . ')',
-            $args{conf_id}, $args{type}, @tags );
-    my $result = $sth->fetchall_arrayref([]);
-    return sort map $_->[0], @$result;
+    my $result = Act::Data::find_tagged(@args{qw(conf_id type tags)});
+    return sort @$result;
 }
 sub find_tags
 {
     my ($class, %args) = @_;
     return [] if $args{filter} && !@{$args{filter}};
-    my $SQL = 'SELECT tag, COUNT(tag) FROM tags'
-            . ' WHERE conf_id = ? AND type = ?';
-    my @values = ( $args{conf_id}, $args{type} );
-    if ($args{filter}) {
-        $SQL .= ' AND tagged_id IN (' . join(',',('?') x @{$args{filter}}) . ')';
-        push @values, @{$args{filter}};
-    }
-    $SQL .= ' GROUP BY tag ORDER BY tag';
-    my $sth = sql($SQL, @values);
-    return $sth->fetchall_arrayref([]);
+    return Act::Data::find_tags($args{conf_id}, $args{type}, $args{filter});
 }
 sub get_cloud
 {

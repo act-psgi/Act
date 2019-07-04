@@ -398,6 +398,32 @@ sub participations ($user_id) {
 
 
 # ----------------------------------------------------------------------
+# From Act::Tag
+sub find_tagged ($conference,$type,$tags) {
+    my $sth = sql(
+        'SELECT DISTINCT tagged_id FROM tags'
+            . ' WHERE conf_id = ? AND type = ?'
+            . ' AND tag IN (' . join(',', ('?') x @$tags) . ')',
+        $conference, $type, @$tags );
+    my @result = map { $_->[0] } @{$sth->fetchall_arrayref([])};
+    return \@result;
+}
+
+sub find_tags ($conference,$type,$filter) {
+    my $sql = 'SELECT tag, COUNT(tag) FROM tags'
+            . ' WHERE conf_id = ? AND type = ?';
+    my @values = ( $conference, $type );
+    if ($filter) {
+        $sql .= ' AND tagged_id IN (' . join(',',('?') x @$filter) . ')';
+        push @values, @$filter;
+    }
+    $sql .= ' GROUP BY tag ORDER BY tag';
+    my $sth = sql($sql, @values);
+    return $sth->fetchall_arrayref([]);
+}
+
+
+# ----------------------------------------------------------------------
 # From Act::News
 # The following queries doesn't technically pass a conference, but news
 # (and their identifiers) are conference specific data.
@@ -639,6 +665,16 @@ evaluated attributes of a yet-to-be-written class Act::Visitor.
 Returns a reference to an array holding the numerical user ids of
 users who announced to attend the talk C<$talk_id> at C<$conference>.
 
+=head3 $listref = Act::Data::find_tagged($conference,$type,$tags)
+
+Returns a reference of tag ids for the given conference,
+tag type, and tags in C<@$tags>.
+
+=head3 ACt::Data::find:tags($conference,$type,$filter)
+
+Returns an array reference to array references containing tags and
+their count each.
+
 =head2 Queries about users
 
 =head3 Act::Data::store_token(token,$email,$data)
@@ -709,7 +745,7 @@ orders.
 
 =head1 CAVEATS
 
-There are no automated tests for these functions yet.  This is bad.
+The Act test suite doesn't exercise all of these functions.  This is bad.
 
 =head1 AUTHOR
 
