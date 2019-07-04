@@ -4,6 +4,7 @@ use DateTime;
 use List::Util qw(first sum);
 
 use Act::Config;
+use Act::Data;
 use Act::Object;
 use Act::Util;
 use base qw( Act::Object );
@@ -30,8 +31,11 @@ sub create {
     my $order = $class->SUPER::create(%args);
     if ($order && $items) {
         for my $item (@$items) {
-            sql('INSERT INTO order_items ( order_id, amount, name, registration ) VALUES (?, ?, ?, ?)',
-                $order->order_id, $item->{amount}, $item->{name}, $item->{registration} ? 't' : 'f' );
+            Act::Data::insert_order($order->order_id,
+                                    $item->{amount},
+                                    $item->{name},
+                                    $item->{registration}
+                                );
         }
         $Request{dbh}->commit;
     }
@@ -48,18 +52,7 @@ sub items
     return $self->{items} if exists $self->{items};
 
     # fill the cache if necessary
-    my $sth = sql("SELECT item_id, amount, name, registration FROM order_items WHERE order_id = ?",
-                  $self->order_id);
-
-    $self->{items} = [];
-    while( my ($item_id, $amount, $name, $registration) = $sth->fetchrow_array() ) {
-        push @{ $self->{items} }, { item_id      => $item_id,
-                                    amount       => $amount,
-                                    name         => $name,
-                                    registration => $registration,
-                                   };
-    }
-    $sth->finish();
+    $self->{items} = Act::Data::fetch_orders($self->order_id);
     return $self->{items};
 }
 

@@ -422,6 +422,32 @@ sub update_news($news_id,$items) {
     }
 }
 
+# ----------------------------------------------------------------------
+# From Act::Orders
+# This stuff also is only "indirectly" bound to a conference.
+sub insert_order ($order_id, $amount, $name, $registration) {
+    sql('INSERT INTO order_items ( order_id, amount, name, registration )'
+      . ' VALUES (?, ?, ?, ?)',
+        $order_id, $amount, $name, $registration ? 't' : 'f' );
+}
+
+
+sub fetch_orders ($order_id) {
+    my $sth = sql('SELECT item_id, amount, name, registration'
+                . ' FROM order_items WHERE order_id = ?',
+                  $order_id);
+    my @items;
+    while( my ($item_id, $amount, $name, $registration) = $sth->fetchrow_array() ) {
+        push @items, { item_id      => $item_id,
+                       amount       => $amount,
+                       name         => $name,
+                       registration => $registration,
+                     };
+    }
+    $sth->finish();
+    return \@items;
+}
+
 
 # ----------------------------------------------------------------------
 # Fetch the database handler
@@ -670,6 +696,16 @@ are assigned per conference, every news item belongs to exactly one
 conference.
 
 B<Note:> This function I<does not commit changes to the database.>
+
+=head3 Act::Data::insert_order($order_id, $amount, $name, $registration)
+
+Inserts an order into the database.  C<$registration> is a boolean
+which is mapped to C<'t'> or C<'f'>.
+
+=head3 $ref = Act::Data::fetch_orders($order_id)
+
+Returns an array reference holding hash references for each of the
+orders.
 
 =head1 CAVEATS
 
