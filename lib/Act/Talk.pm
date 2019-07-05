@@ -1,5 +1,6 @@
 package Act::Talk;
 use Act::Config;
+use Act::Data;
 use Act::Object;
 use base qw( Act::Object );
 
@@ -32,7 +33,7 @@ our %sql_opts    = ( 'order by' => 'talk_id' );
 sub delete {
     my ($self, %args) = @_;
 
-    sql('DELETE FROM user_talks WHERE talk_id=?', $self->talk_id);
+    Act::Data::delete_talk_attendance($self->talk_id);
 
     $self->SUPER::delete(%args);
     $Request{dbh}->commit;
@@ -40,10 +41,7 @@ sub delete {
 
 sub stars {
     my ($self, %args) = @_;
-    my $sth = sql('SELECT COUNT(*) FROM user_talks WHERE talk_id=?', $self->talk_id);
-    my ($count) = $sth->fetchrow_array();
-    $sth->finish;
-    return $count || 0;
+    return Act::Data::talk_stars($self->talk_id);
 }
 
 =head1 NAME

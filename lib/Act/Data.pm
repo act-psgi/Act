@@ -476,6 +476,23 @@ sub fetch_orders ($order_id) {
 
 
 # ----------------------------------------------------------------------
+# From Act::Talk
+# Another two subroutines which don't pass a conference because they
+# refer to talks, which are associated with a conference.
+sub delete_talk_attendance ($talk_id) {
+    sql('DELETE FROM user_talks WHERE talk_id=?', $talk_id);
+}
+
+sub talk_stars ($talk_id) {
+    my $sth = sql('SELECT COUNT(*) FROM user_talks'
+                . ' WHERE talk_id=?', $talk_id);
+    my ($count) = $sth->fetchrow_array();
+    $sth->finish;
+    return $count || 0;
+}
+
+
+# ----------------------------------------------------------------------
 # Fetch the database handler
 sub dbh {
     # TODO: The data base handler is supposed to be stored somewhere else
@@ -742,6 +759,15 @@ which is mapped to C<'t'> or C<'f'>.
 
 Returns an array reference holding hash references for each of the
 orders.
+
+=head3 Act::Data::delete_talk_attendance ($talk_id)
+
+Removes information about a talk's attendance (before deleting the
+talk itself).
+
+=head3 $count = Act::Data::talk_stars($talk_id)
+
+Returns the number of stars for a talk given by its ID.
 
 =head1 CAVEATS
 
