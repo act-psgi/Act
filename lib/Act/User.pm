@@ -69,15 +69,8 @@ sub rights {
     return $self->{rights} if exists $self->{rights};
 
     # get the user's rights
-    $self->{rights} = {};
-
-    my $sth = sql(
-                       'SELECT right_id FROM rights WHERE conf_id=? AND user_id=?',
-                       $Request{conference}, $self->user_id
-                      );
-    $self->{rights}{$_->[0]}++ for @{ $sth->fetchall_arrayref };
-    $sth->finish;
-
+    my $rights = Act::Data::user_rights($Request{conference},$self->user_id); 
+    $self->{rights}{$_->[0]}++ for @$rights;
     return $self->{rights};
 }
 
@@ -105,12 +98,7 @@ sub bio {
     return $self->{bio} if exists $self->{bio};
 
     # fill the cache if necessary
-    my $sth = sql("SELECT lang, bio FROM bios WHERE user_id=?", $self->user_id );
-    $self->{bio} = {};
-    while( my $bio = $sth->fetchrow_arrayref() ) {
-        $self->{bio}{$bio->[0]} = $bio->[1];
-    }
-    $sth->finish();
+    $self->{bio} = Act::Data::bio($self->user_id);
     return $self->{bio};
 }
 

@@ -157,6 +157,17 @@ sub remove_right ($conference,$user_id,$right_id) {
     $dbh->commit;
 }
 
+# ----------------------------------------------------------------------
+# From Act::User
+sub user_rights ($conference,$user_id) {
+    my $sth = sql(
+        'SELECT right_id FROM rights WHERE conf_id=? AND user_id=?',
+        $conference, $user_id
+    );
+    my @rights = map { $_->[0] } @{ $sth->fetchall_arrayref };
+    $sth->finish;
+    return \@rights;
+}
 
 # ----------------------------------------------------------------------
 # From Act::Handler::User::Search
@@ -360,7 +371,14 @@ sub tshirt_size ($user_id) {
 
 
 # ----------------------------------------------------------------------
-# From Act::User::update
+# From Act::User
+sub bio ($user_id) {
+    my $sth = sql('SELECT lang, bio FROM bios WHERE user_id=?',$user_id);
+    my %bio = map { @$_ } @{$sth->fetchall_arrayref()};
+    $sth->finish;
+    return \%bio;
+}
+
 sub update_bio ($user_id,$bio) {
     my @sql =
         (
@@ -645,6 +663,11 @@ id C<$user_id> for the conference C<$conference>.
 Removes the right C<$right_id> (a string) from the user with numerical
 user id C<$user_id> for the conference C<$conference>.
 
+=head3 Act::Data::user_rights ($conference, $user_id)
+
+Returns an array reference to the rights of a C<user_id> for a
+C<$conference>.
+
 =head3 $ref = Act::Data::countries($conference)
 
 Returns a reference to an array of ISO country codes from where users
@@ -715,6 +738,11 @@ of conference.
 
 B<Note:> This routine needs to be checked closely.  It breaks the
 segregation of duties between the provider and the organizers.
+
+=head3 Act::Data::bio($user_id)
+
+Returns the biographies for C<$user_id> as a hash reference with
+languages as keys.
 
 =head3 Act::Data::update_bio($user_id,$bio)
 
