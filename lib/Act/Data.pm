@@ -710,7 +710,7 @@ users who announced to attend the talk C<$talk_id> at C<$conference>.
 Returns a reference of tag ids for the given conference,
 tag type, and tags in C<@$tags>.
 
-=head3 ACt::Data::find:tags($conference,$type,$filter)
+=head3 Act::Data::find:tags($conference,$type,$filter)
 
 Returns an array reference to array references containing tags and
 their count each.
