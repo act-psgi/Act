@@ -49,14 +49,14 @@ sub handler
 
     my $req = Act::Request->new($env);
     my $res = $req->response;
-
     # check csv request
-    unless( exists $CSV{$req->path_info} ) {
+    my $type = $req->path_info;
+    $type =~ s!^/!!;
+    unless( exists $CSV{$type} ) {
         $res->status(404);
         return $res->finalize;
     }
-
-    my $report = $CSV{$req->path_info};
+    my $report = $CSV{$type};
 
     # check rights
     unless ( $Request{user} && $report->[0]->($Request{user})) {
@@ -78,8 +78,8 @@ sub handler
         $body .= $csv->format_row(@$row);
     }
 
+    utf8::encode($body);
     $res->body($body);
-
     return $res->finalize;
 }
 
