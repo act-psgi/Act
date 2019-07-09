@@ -142,7 +142,7 @@ sub wiki_diff
 
         $v{user} = Act::User->new(user_id => $v{metadata}{user_id}[0]);
         $v{last_modified} = format_datetime_string($v{last_modified});
-        $v{content} .= "\n" if index($v{content}, "\n") == -1;
+        $v{content} =~ s/\n?$/\n/s;
 
         $versions{$r} = \%v;
     }
