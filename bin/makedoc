@@ -324,9 +324,9 @@ Example:
 Build the HTML docs as a subdirectory the root of an Act checkout, and use the supplied static
 resources (images and stylesheets) files in F<mandocs/>:
 
-  act% bin/makedocs --baseurl=${PWD}/mandocs docs
+  act% bin/makedoc --baseurl=${PWD}/mandocs docs
 
-This will create an HTML tree suitable for local (C<file://) viewing.
+This will create an HTML tree suitable for local (C<file://>) viewing.
 
 =item B<--verbose>
 
