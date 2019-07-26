@@ -16,3 +16,11 @@ github-hook
 var
 /conferences/*
 !conferences/demo/
+
+## Build artifacts
+# dzil intermediate
+/.build
+# dzil build result
+/Act-*
+# Test coverage results
+/cover_db
