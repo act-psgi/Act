@@ -22,8 +22,9 @@ sub mock_config {
     my $cfg = Test::MockObject->new;
     for my $field (qw(database_dsn database_host
                       database_user database_passwd)) {
+        my $mock_field = $field =~ s/database_/database_test_/r;
         $cfg->set_always($field => exists $changes{$field} ?
-                             $changes{$field} : $Act::Config::Config->$field);
+                             $changes{$field} : $Act::Config::Config->$mock_field);
     }
     return $cfg;
 }
