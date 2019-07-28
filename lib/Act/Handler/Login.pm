@@ -8,13 +8,13 @@ use Act::Util;
 
 sub handler
 {
+    my ($env) = @_;
     my $r   = $Request{r};
-    my $env = $r->env;
 
     # disable client-side caching
     $r->no_cache(1);
 
-    # destination URI
+    # destination URI, provided by Auth middleware
     my $uri = $env->{'act.login.destination'} || Act::Util::make_uri('');
 
     # process the login form template
@@ -23,7 +23,7 @@ sub handler
         error       => $env->{'act.login.error'},
         destination => $uri,
         action      => join('/', '', $Request{conference}, 'LOGIN'),
-        domain      => join('.', (split /\./, $r->env->{HTTP_HOST})[-2, -1]),
+        domain      => join('.', (split /\./, $env->{HTTP_HOST})[-2, -1]),
     );
     $template->process('login');
     $Request{status} = 200;

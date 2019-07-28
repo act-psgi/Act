@@ -97,9 +97,11 @@ sub _check_db_version {
     }
 }
 
-# ======== Methods =====================================================
+# ======== Data Manipulation Methods ===================================
 
-=head2 $version = $db->get_schema_version()
+=head2 Database Metadata
+
+=head3 $version = $db->get_schema_version()
 
 Returns the schema version as provided by the database.  Dies if the
 version can't be retrieved.
@@ -119,6 +121,58 @@ sub get_schema_version {
             "DB error:   '", DBI->errstr, "'\n",
             "eval error: '$_'";
     };
+}
+
+
+=head2 Methods for the Authentication Service
+
+=cut
+
+# ----------------------------------------------------------------------
+
+=head2 Method get_login_password
+
+Obtains the (properly encrypted) login password of a user.
+
+=cut
+
+sub get_user_password {
+    my $self = shift;
+    my ($login) = @_;
+
+    my $sql = 'SELECT passwd FROM users WHERE login = ?';
+    my $pw_hash = $self->connector->run(
+        sub {
+            my $sth = $_->prepare_cached($sql);
+            $sth->execute($login);
+            my $pw_hash = $sth->fetchrow_array;
+            $sth->finish;
+            return $pw_hash;
+        }
+    );
+    return $pw_hash;
+}
+
+
+# ----------------------------------------------------------------------
+
+=head2 Method set_user_password
+
+Stores a (properly encrypted) login password for a user.
+
+=cut
+
+sub set_user_password {
+    my $self = shift;
+    my ($pw_hash) = @_;
+
+    my $sql = 'UPDATE users SET passwd WHERE login = ?';
+    my $success = $self->connector->run(
+        sub {
+            my $sth = $_->prepare_cached($sql);
+            $sth->execute($pw_hash);
+        }
+    )
 }
 
 1;

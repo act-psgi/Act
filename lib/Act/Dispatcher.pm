@@ -24,6 +24,7 @@ my %public_handlers = (
     faces           => 'Act::Handler::User::Faces',
     favtalks        => 'Act::Handler::Talk::Favorites',
     login           => 'Act::Handler::Login',
+    LOGIN           => 'Act::Handler::User::CheckLogin',
     news            => 'Act::Handler::News::List',
     openid          => 'Act::Handler::OpenID',
     proceedings     => 'Act::Handler::Talk::Proceedings',
@@ -127,7 +128,7 @@ sub conference_app {
             my $app = shift;
             sub {
                 for ( $_[0]->{'PATH_INFO'} ) {
-                    if ( s{^/?$}{/index.html} || /\.html$/ || m!/LOGIN!) {
+                    if ( s{^/?$}{/index.html} || /\.html$/) {
                         return $static_app->(@_);
                     }
                     else {

@@ -97,6 +97,7 @@ sub variables
     }
 }
 
+
 sub escape
 {
     return $_[1];   # no default escaping
@@ -112,6 +113,10 @@ sub process
          config  => $Config,
          request => { map { $_ => $Request{$_} } grep { $_ ne 'dbh' } keys %Request },
     );
+    # TODO: This is a horrible kludge, as a supplement to two lines
+    # before, to make sure that the database handle doesn't sneak in
+    # from another place.  Only required for PSGI, of course.
+    delete $global{request}{r}{env}{'act.dbh'};
     $Request{language_info} = $Languages{$Request{language}};
     if ($web) {
          my %lparams = $Request{r}->method eq 'POST' ? () : %{$Request{args}};
