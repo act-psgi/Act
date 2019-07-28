@@ -164,13 +164,13 @@ Stores a (properly encrypted) login password for a user.
 
 sub set_user_password {
     my $self = shift;
-    my ($pw_hash) = @_;
+    my ($login,$pw_hash) = @_;
 
-    my $sql = 'UPDATE users SET passwd WHERE login = ?';
+    my $sql = 'UPDATE users SET passwd = ? WHERE login = ?';
     my $success = $self->connector->run(
         sub {
             my $sth = $_->prepare_cached($sql);
-            $sth->execute($pw_hash);
+            $sth->execute($pw_hash,$login);
         }
     )
 }
