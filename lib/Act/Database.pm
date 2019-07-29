@@ -83,6 +83,14 @@ my @SCHEMA_UPDATES = (
     alter table talks add column hide_details boolean DEFAULT false NOT NULL;
     alter table talks add column allow_record boolean DEFAULT true  NOT NULL;
   },
+#12
+  # See https://metacpan.org/pod/Plack::Session::Store::DBI
+  q{
+    CREATE TABLE sessions (
+      id             CHAR(72) PRIMARY KEY,
+      session_data   TEXT
+    )
+  },
 );
 
 # returns ( current database schema version, required version )

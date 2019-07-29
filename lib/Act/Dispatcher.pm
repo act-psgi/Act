@@ -4,6 +4,7 @@ package Act::Dispatcher;
 use Act::Config;
 use Act::Handler::Static;
 use Act::Util;
+use Act::Session::Store;
 
 use File::Spec::Functions qw(catfile rel2abs);
 use List::Util qw(first);
@@ -80,6 +81,12 @@ sub to_app {
     my $app            = builder {
         enable 'Debug', panels => [split(/\s+/, $ENV{ACT_DEBUG})]
             if $ENV{ACT_DEBUG};
+        enable 'Session',
+            session_key => 'act_session',
+            expires     => 3600 * 24 * 30, # 30 days
+            secret      => 'abcddcba',
+            store       => Act::Session::Store->new(),
+            ;
         enable 'ReverseProxy';
         enable '+Act::Middleware::ErrorPage';
         enable sub {

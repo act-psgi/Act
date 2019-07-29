@@ -37,7 +37,7 @@ sub _build_connector {
         $dsn,
         $Config->database_user,
         $Config->database_passwd,
-        { AutoCommit => 0,
+        { AutoCommit => 1,
           PrintError => 0,
           RaiseError => 1,
           pg_enable_utf8 => 1,
