@@ -4,6 +4,7 @@ use warnings;
 
 use parent qw(Plack::Middleware);
 use Plack::Request;
+use Plack::Session;
 use Try::Tiny;
 use Plack::Util::Accessor qw(private);
 use Encode qw(decode);
@@ -17,12 +18,12 @@ sub call {
     my $session_id = $req->cookies->{'Act_session_id'};
 
     $env->{'act.auth.login'} = \&_login;
-    $env->{'act.auth.logout'} = \&_logout;
-    $env->{'act.auth.set_session'} = \&_set_session;
 
     my $user;
-    if(defined $session_id) {
-        $user = Act::User->new( session_id => $session_id );
+    my $session = Plack::Session->new($env);
+    if (my $login = $session->get('login')) {
+        # Using the traditional interface
+        $user = Act::User->new( login => $login );
     }
 
     if ($user) {
@@ -42,23 +43,6 @@ sub _login {
     $resp->cookies->{'Act_session_id'} = {
         value => $sid,
         path => '/',
-    };
-}
-sub _logout {
-    my $resp = shift;
-    $resp->cookies->{'Act_session_id'} = {
-        value => '',
-        expires => 1,
-    };
-}
-sub _set_session {
-    my $resp = shift;
-    my $sid = shift;
-    my $remember_me = shift;
-    $resp->cookies->{Act_session_id} = {
-        value => $sid,
-        path => '/',
-        $remember_me ? ( expires => time + 6*30*24*60*60 ) : (),
     };
 }
 

@@ -15,6 +15,8 @@ use parent 'Act::Handler';
 use Act::User::Authenticate;
 use Act::Store::Database;
 
+use Plack::Session;
+
 sub handler {
     my ($env) = @_;
     my $request = Plack::Request->new($env);
@@ -48,10 +50,11 @@ sub handler {
 
         # user is authenticated - create a session
         my $user = Act::User->new( login => lc $login );
-        my $sid = Act::Util::create_session($user);
+        my $session = Plack::Session->new($env);
+        $session->set(login => lc $login);
+
         my $resp = Plack::Response->new;
         $resp->redirect($destination);
-        _set_session($resp, $sid, $remember_me);
         $resp->finalize;
     }
     catch {
@@ -65,7 +68,6 @@ sub handler {
         $request->logger->({ level => 'error', message => $full_error });
         $env->{'act.login.destination'} = $destination;
         $env->{'act.login.error'} = 1;
-        # avoid cloning the DBH which segfaults
         0;
     };
     return $continue || Act::Handler::Login->new->call($env);
@@ -112,17 +114,6 @@ sub _check_legacy_password {
     return 0;
 }
 
-
-sub _set_session {
-    my $resp = shift;
-    my $sid = shift;
-    my $remember_me = shift;
-    $resp->cookies->{Act_session_id} = {
-        value => $sid,
-        path => '/',
-        $remember_me ? ( expires => time + 6*30*24*60*60 ) : (),
-    };
-}
 
 1;
 

@@ -14,6 +14,7 @@ use Plack::App::File;
 use Plack::Builder;
 use Plack::Middleware::Debug;
 use Plack::Request;
+use Plack::Session::State::Cookie;
 
 # main dispatch table
 my %public_handlers = (
@@ -82,9 +83,11 @@ sub to_app {
         enable 'Debug', panels => [split(/\s+/, $ENV{ACT_DEBUG})]
             if $ENV{ACT_DEBUG};
         enable 'Session',
-            session_key => 'act_session',
-            expires     => 3600 * 24 * 30, # 30 days
-            secret      => 'abcddcba',
+            state       => Plack::Session::State::Cookie->new(
+                session_key => 'act_session',
+                secret      => 'abcddcba',
+                httponly    => 1,
+            ),
             store       => Act::Session::Store->new(),
             ;
         enable 'ReverseProxy';
