@@ -4,6 +4,7 @@ use warnings;
 
 use parent qw(Plack::Middleware);
 use Plack::Request;
+use Plack::Session;
 use Act::Config ();
 
 sub call {
@@ -17,16 +18,14 @@ sub call {
     my $language;
 
     # check session
-    my $s = $env->{'psgix.session'}{'act'};
-    if ($s && $s->{language} && $langs->{$s->{language}}) {
-        $language = $s->{language};
-    }
+    my $session = Plack::Session->new($env);
+    $language = $session->get('language');
 
     # override in query string
     # redirect the user to remove the language query param
     my $force_language = $req->param('language');
     if ($force_language && $langs->{$force_language} ) {
-        $language = $s->{language} = $force_language;
+        $language = $force_language;
         my $uri = $req->uri;
         my @query = $uri->query_form;
         for (my $i = 0; $i < @query; $i += 2 ) {
@@ -37,7 +36,7 @@ sub call {
         $uri->query_form(\@query);
         my $resp = Plack::Response->new;
         $resp->redirect($uri->as_string);
-        $env->{'psgix.session'}->{'act'}->{language} = $language;
+        $session->set('language',$language);
         return $resp->finalize;
     }
 
@@ -51,7 +50,8 @@ sub call {
                 $v =~ s/;.*$//;
                 $v =~ s/-.*$//;
                 if ($v && $langs->{$v}) {
-                    $language = $s->{language} = $v;
+                    $language = $v;
+                    $session->set('language',$v);
                     die [];
                 }
             });

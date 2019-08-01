@@ -6,7 +6,9 @@ our @EXPORT = qw(mock_config     mock_file
                  mock_middleware mock_handler
             );
 
+use Test::MockModule;
 use Test::MockObject;
+use Plack::Session::Store;
 use Plack::Test;
 use YAML::Tiny;
 
@@ -97,7 +99,13 @@ sub mock_config {
 
 use Act::Config;
 $Config = mock_config;
+
 require Act::Dispatcher;
+
+# Prevent the app constructor from accessing the database
+my $act_session = Test::MockModule->new('Act::Session::Store');
+$act_session->mock(new => sub { Plack::Session::Store->new() });
+
 my $app    = Act::Dispatcher->to_app;
 my $tester = Plack::Test->create($app);
 

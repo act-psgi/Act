@@ -4,6 +4,7 @@ package Act::Dispatcher;
 use Act::Config;
 use Act::Handler::Static;
 use Act::Util;
+use Act::Session::Store;
 
 use File::Spec::Functions qw(catfile rel2abs);
 use List::Util qw(first);
@@ -13,6 +14,7 @@ use Plack::App::File;
 use Plack::Builder;
 use Plack::Middleware::Debug;
 use Plack::Request;
+use Plack::Session::State::Cookie;
 
 # main dispatch table
 my %public_handlers = (
@@ -24,6 +26,7 @@ my %public_handlers = (
     faces           => 'Act::Handler::User::Faces',
     favtalks        => 'Act::Handler::Talk::Favorites',
     login           => 'Act::Handler::Login',
+    LOGIN           => 'Act::Handler::User::CheckLogin',
     news            => 'Act::Handler::News::List',
     openid          => 'Act::Handler::OpenID',
     proceedings     => 'Act::Handler::Talk::Proceedings',
@@ -79,6 +82,14 @@ sub to_app {
     my $app            = builder {
         enable 'Debug', panels => [split(/\s+/, $ENV{ACT_DEBUG})]
             if $ENV{ACT_DEBUG};
+        enable 'Session',
+            state       => Plack::Session::State::Cookie->new(
+                session_key => 'act_session',
+                secret      => 'abcddcba',
+                httponly    => 1,
+            ),
+            store       => Act::Session::Store->new(),
+            ;
         enable 'ReverseProxy';
         enable '+Act::Middleware::ErrorPage';
         enable sub {
@@ -127,7 +138,7 @@ sub conference_app {
             my $app = shift;
             sub {
                 for ( $_[0]->{'PATH_INFO'} ) {
-                    if ( s{^/?$}{/index.html} || /\.html$/ || m!/LOGIN!) {
+                    if ( s{^/?$}{/index.html} || /\.html$/) {
                         return $static_app->(@_);
                     }
                     else {

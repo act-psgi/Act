@@ -10,6 +10,7 @@ use Act::TwoStep;
 use Act::User;
 use Act::Util;
 use DateTime;
+use Plack::Session;
 
 # twostep form
 my $twostep_form = Act::Form->new(
@@ -38,6 +39,7 @@ my $form = Act::Form->new(
 );
 
 sub handler {
+    my ($env) = @_;
     # conference is closed
     if ($Config->closed) {
         $Request{status} = 403;
@@ -129,8 +131,8 @@ sub handler {
                 Act::TwoStep::remove($token);
 
                 # log the user in
-                $Request{r}->login($user);
-                
+                Plack::Session->new($env)->set(login => $user->login);
+
                 # display "added page"
                 $template->variables(
                     clear_passwd => $clear_passwd,

@@ -2,134 +2,27 @@ package Act::Middleware::Auth;
 use strict;
 use warnings;
 
+use Act::User;
+
 use parent qw(Plack::Middleware);
-use Plack::Request;
-use Plack::Response;
-use Act::Config ();
-use Try::Tiny;
+use Plack::Session;
 use Plack::Util::Accessor qw(private);
-use Encode qw(decode);
 
 sub call {
     my $self = shift;
     my $env = shift;
 
-    my $req = Plack::Request->new($env);
+    my $session = Plack::Session->new($env);
+    my $login   = $session->get('login');
+    $env->{'act.loginuser'} = $login;
 
-    if ($req->path_info eq 'LOGIN' || $req->path_info eq '/LOGIN') {
-        return $self->check_login($req);
-    }
-
-    my $session_id = $req->cookies->{'Act_session_id'};
-
-    $env->{'act.auth.login'} = \&_login;
-    $env->{'act.auth.logout'} = \&_logout;
-    $env->{'act.auth.set_session'} = \&_set_session;
-
-    my $user;
-    if(defined $session_id) {
-        $user = Act::User->new( session_id => $session_id );
-    }
-
-    if ($user) {
-        $env->{'act.user'} = $user;
-    }
-    elsif ($self->private) {
+    if (! $login  && $self->private) {
         $env->{'act.login.destination'} = $env->{REQUEST_URI};
         return Act::Handler::Login->new->call($env);
     }
+
+    $env->{'act.user'} = Act::User->new( login => $login );
     $self->app->($env);
 }
 
-sub _login {
-    my $resp = shift;
-    my $user = shift;
-    my $sid = Act::Util::create_session($user);
-    $resp->cookies->{'Act_session_id'} = {
-        value => $sid,
-        path => '/',
-    };
-}
-sub _logout {
-    my $resp = shift;
-    $resp->cookies->{'Act_session_id'} = {
-        value => '',
-        expires => 1,
-    };
-}
-sub _set_session {
-    my $resp = shift;
-    my $sid = shift;
-    my $remember_me = shift;
-    $resp->cookies->{Act_session_id} = {
-        value => $sid,
-        path => '/',
-        $remember_me ? ( expires => time + 6*30*24*60*60 ) : (),
-    };
-}
-
-# TODO: (Refactoring) check_login should be a handler, not a middleware.
-# If it will be a handler, don't decode here as Act::Handler does this for you.
-sub check_login {
-    my $self = shift;
-    my $req = shift;
-
-    my $params = $req->parameters;
-
-    my $login       = decode('UTF-8',$params->get('credential_0'),Encode::FB_CROAK);
-    my $sent_pw     = decode('UTF-8',$params->get('credential_1'),Encode::FB_CROAK);
-    my $remember_me = decode('UTF-8',$params->get('credential_2'),Encode::FB_CROAK);
-    my $dest        = decode('UTF-8',$params->get('destination') ,Encode::FB_CROAK);
-
-    # remove leading and trailing spaces
-    for ($login, $sent_pw) {
-        s/^\s*//;
-        s/\s*$//;
-    }
-
-    return try {
-        # login and password must be provided
-        $login
-            or die ["No login name"];
-        $sent_pw
-            or die ["No password"];
-
-        # search for this user in our database
-        my $user = Act::User->new( login => lc $login );
-        $user
-            or die ["Unknown user"];
-
-        try {
-            $user->check_password($sent_pw);
-        }
-        catch {
-            die ["Bad password. (Error: $_)"];
-        };
-
-        # user is authenticated - create a session
-        my $sid = Act::Util::create_session($user);
-        my $resp = Plack::Response->new;
-        $resp->redirect($dest);
-        _set_session($resp, $sid, $remember_me);
-        return $resp->finalize;
-    }
-    catch {
-        my $env = $req->env;
-
-        my $error = ref $_ eq 'ARRAY' ? $_->[0] : $_;
-        my $full_error = join ' ', map { "[$_]" }
-            $env->{HTTP_HOST},
-            $req->address,
-            $login,
-            $error;
-
-        $req->logger->({ level => 'error', message => $full_error });
-
-        $env->{'act.login.destination'} = $dest;
-        $env->{'act.login.error'} = 1;
-        return Act::Handler::Login->new->call($env);
-    };
-}
-
 1;
-

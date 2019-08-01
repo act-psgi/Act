@@ -6,8 +6,11 @@ use Act::Config;
 use Act::Template::HTML;
 use Act::Util;
 
+use Plack::Session;
+
 sub handler
 {
+    my ($env) = @_;
     my $r = $Request{r};
 
     # disable client-side caching
@@ -17,7 +20,7 @@ sub handler
     $Request{user}->update(session_id => undef);
 
     # remove the session cookie
-    $r->logout;
+    Plack::Session->new($env)->expire;
 
     # we're no longer authenticated
     undef $Request{user};
