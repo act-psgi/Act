@@ -1,15 +1,22 @@
 package Act::Store::Database;
 # ABSTRACT: Use relational databases as store for Act data
 
+use 5.020;
+
 use DBIx::Connector;
 use Try::Tiny;
 
 use Act::Config (); # Let's stick to that for the moment
                     # but do not use the exports
-use Act::Database;  # Will at some point be merged into this module
+use Act::Database;  # Actually, that' the schema history
+use Act::Schema;    # That's how we intend to do it from now on
 
 use Moo;
 use Types::Standard qw(InstanceOf);
+with 'MooX::Singleton';
+
+no warnings qw(experimental::signatures);
+use feature qw(signatures);
 
 # ======== Class Variables =============================================
 my $db_singleton;
@@ -20,13 +27,18 @@ has connector => (
     is => 'ro', isa => InstanceOf['DBIx::Connector'],
     lazy => 1,
     builder => '_build_connector',
-    documentation =>
-        '',
+    handles => [ 'dbh' ],
 );
 
+has schema => (
+    is => 'ro', isa => InstanceOf['Act::Schema'],
+    lazy => 1,
+    builder => '_build_schema',
+);
+
+
 # -------- Attribute helpers -------------------------------------------
-sub _build_connector {
-    my $self = shift;
+sub _build_connector ($self) {
     my $Config = $Act::Config::Config;
     my $dsn = $Config->database_dsn;
     if ($Config->database_host) {
@@ -48,6 +60,18 @@ sub _build_connector {
     return $connector;
 }
 
+sub _build_schema ($self) {
+    my $dbh = Act::Store::Database->instance->dbh;
+    my $schema = Act::Schema->connect( sub { $dbh },
+                                      { AutoCommit => 1,
+                                        PrintError => 0,
+                                        RaiseError => 1,
+                                        pg_enable_utf8 => 1,
+                                      }
+                                  );
+    return $schema;
+}
+
 =head1 METHODS
 
 =cut
@@ -55,36 +79,21 @@ sub _build_connector {
 
 # ======== Singleton definition and helpers ============================
 
-=head2 $db = instance(@args)
+=head2 $db = instance()
 
 Returns the instance of the database store, or dies on failure.
 
 =cut
 
-sub instance {
-    my $class = shift;
-    return $db_singleton // $class->_init(@_);
-}
-
-# _init
-#   Purpose: Initializes (or overwrites) the singleton.
-sub _init {
-    my $class = shift;
-    $db_singleton = $class->new(@_);
-    $db_singleton->_check_db_version();
-    return $db_singleton;
-}
-
-# _clear_instance
-#   Purpose: Deletes the singleton.  For testing purposes only.
-sub _clear_instance {
-    undef $db_singleton;
+# BUILD
+# After object creation, check whether the versions of code and schema match
+sub BUILD ($self,@) {
+    $self->_check_db_version;
 }
 
 # _check_db_version
 #   Purpose: Make sure that the code understands the database schema.
-sub _check_db_version {
-    my $self = shift;
+sub _check_db_version ($self) {
     my $current_version = $self->get_schema_version();
     my $required_version = Act::Database::required_version;
     if ($current_version > $required_version) {
@@ -108,8 +117,7 @@ version can't be retrieved.
 
 =cut
 
-sub get_schema_version {
-    my $self = shift;
+sub get_schema_version ($self) {
     my $current_version = try {
         $self->connector->run(
             sub {
@@ -124,56 +132,35 @@ sub get_schema_version {
 }
 
 
-=head2 Methods for the Authentication Service
+# ======================================================================
 
-=cut
+=head2 Methods for a conference data servoce
+
+The folliowing methods usually pass a conference in their parameter
+lists, though some of the tables collect items for all conferences.
 
 # ----------------------------------------------------------------------
 
-=head2 Method get_login_password
+=head3 Method user_rights
 
-Obtains the (properly encrypted) login password of a user.
+Returns an array reference to the rights of a C<user_id> for a
+C<$conference>.
 
 =cut
 
-sub get_user_password {
-    my $self = shift;
-    my ($login) = @_;
-
-    my $sql = 'SELECT passwd FROM users WHERE login = ?';
-    my $pw_hash = $self->connector->run(
+sub user_rights ($self,$conference,$user_id) {
+    my $sql = 'SELECT right_id FROM rights WHERE conf_id=? AND user_id=?';
+    return $self->connector->run(
         sub {
             my $sth = $_->prepare_cached($sql);
-            $sth->execute($login);
-            my $pw_hash = $sth->fetchrow_array;
+            $sth->execute($conference, $user_id);
+            my @rights = map { $_->[0] } @{ $sth->fetchall_arrayref };
             $sth->finish;
-            return $pw_hash;
+            return \@rights;
         }
     );
-    return $pw_hash;
 }
 
-
-# ----------------------------------------------------------------------
-
-=head2 Method set_user_password
-
-Stores a (properly encrypted) login password for a user.
-
-=cut
-
-sub set_user_password {
-    my $self = shift;
-    my ($login,$pw_hash) = @_;
-
-    my $sql = 'UPDATE users SET passwd = ? WHERE login = ?';
-    my $success = $self->connector->run(
-        sub {
-            my $sth = $_->prepare_cached($sql);
-            $sth->execute($pw_hash,$login);
-        }
-    )
-}
 
 1;
 

@@ -2,18 +2,13 @@
 package Act::Handler::User::CheckLogin;
 use strict;
 
-use Authen::Passphrase::BlowfishCrypt;
-use Authen::Passphrase;
-use Digest::SHA qw(sha512);
-use Digest::MD5 qw(md5_hex);
-use Encode qw(encode);
 use Plack::Request;
 use Plack::Response;
 use Try::Tiny;
 
 use parent 'Act::Handler';
-use Act::User::Authenticate;
 use Act::Store::Database;
+use Act::Auth::Password;
 
 use Plack::Session;
 
@@ -38,11 +33,8 @@ sub handler {
         $sent_pw
             or die ["No password"];
 
-        my $db = Act::Store::Database->instance;
-        my $pw_hash = $db->get_user_password($login)
-            or die ["Unknown user"];
         try {
-            check_password($login,$sent_pw,$pw_hash);
+            Act::Auth::Password->check_password($login,$sent_pw);
         }
             catch {
                 die ["Bad password. (Error: $_)"];
@@ -73,48 +65,6 @@ sub handler {
     return $continue || Act::Handler::Login->new->call($env);
 }
 
-
-sub set_password {
-    my ($login,$password) = @_;
-    my $db = Act::Store::Database->instance;
-    $db->set_user_password(_crypt_password($login,$password));
-    return 1;
-}
-
-sub check_password {
-    my ($login,$sent_pw,$pw_hash) = @_;
-
-    my $ppr = eval { Authen::Passphrase->from_rfc2307($pw_hash); };
-    return 1 if $ppr && $ppr->match(_sha_pass($sent_pw));
-    return 1 if _check_legacy_password($login,$sent_pw,$pw_hash);
-    die 'Bad password';
-}
-
-
-sub _sha_pass {
-    my ($pass) = @_;
-    return sha512(encode('UTF-8',$pass,Encode::FB_CROAK));
-}
-
-sub _check_legacy_password {
-    my ($login,$check_pass,$pw_hash) = @_;
-    my ($scheme, $hash) = $pw_hash =~ /^(?:{(\w+)})?(.*)$/;
-
-    if (!$scheme || $scheme eq 'MD5') {
-        my $ok = try {
-            my $digest = Digest::MD5->new;
-            $digest->add($check_pass); # this dies from wide characters
-            $digest->b64digest eq $hash;
-        } catch {
-            0; # a failed digest can be safely mapped to "bad password"
-        };
-        $ok && set_password($login,$check_pass); # upgrade hash
-        return $ok;
-    }
-    return 0;
-}
-
-
 1;
 
 __END__
@@ -123,7 +73,7 @@ __END__
 
 =head1 NAME
 
-Act::Handler::User::Authenticate -  Collect user credentials and have them checked
+Act::Handler::User::CheckLogin -  Collect user credentials and have them checked
 
 =head1 SYNOPSIS
 

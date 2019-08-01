@@ -3,6 +3,7 @@ package Act::Handler::User::ChangePassword;
 use strict;
 use parent 'Act::Handler';
 
+use Act::Auth::Password;
 use Act::Config;
 use Act::Form;
 use Act::Template::HTML;
@@ -10,8 +11,9 @@ use Act::User;
 use Act::Util;
 use Act::TwoStep;
 use Digest::MD5 ();
+use Plack::Session;
 use Try::Tiny;
-use Act::Middleware::Auth;
+
 
 my $form = Act::Form->new(
   required => [qw(newpassword1 newpassword2)],
@@ -51,6 +53,7 @@ my $twostep_template = 'user/twostep_change_password';
 
 sub handler
 {
+    my ($env) = @_;
     my $template = Act::Template::HTML->new();
     my $fields;
     if ($Request{args}{ok}) {
@@ -65,7 +68,9 @@ sub handler
         if ($Request{user}) { # 
             # compare passwords
             try {
-                $Request{user}->check_password($fields->{oldpassword});
+                Act::Auth::Password->check_password(
+                    $Request{user}->login,$fields->{oldpassword}
+                );
             }
             catch {
                 $ok = 0;
@@ -88,11 +93,12 @@ sub handler
             unless ($Request{user}) {
                 my $user = Act::User->new(user_id => $token_data)
                     or die "unknown user_id: $token_data\n";
-                $Request{r}->login($user);
                 Act::TwoStep::remove($token);
+                Plack::Session->new($env)->set(login => $user->login);
             }
             # update user
-            $Request{user}->set_password( $fields->{newpassword1} );
+            Act::Auth::Password->set_password( $Request{user}->login,
+                                               $fields->{newpassword1} );
 
             # redirect to user's main page
             return Act::Util::redirect(make_uri('main'));

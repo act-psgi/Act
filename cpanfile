@@ -35,6 +35,7 @@ requires 'List::Pairwise'             => 0;
 requires 'Locale::Maketext::Lexicon'  => 0;
 requires 'Module::Pluggable::Object'   => 0;
 requires 'Moo'                        => 0;
+requires 'MooX::Singleton'            => 0;
 requires 'Net::OpenID::Server'        => 0;
 requires 'Pod::POM'                   => 0;
 requires 'lib::abs'                   => '0.93';

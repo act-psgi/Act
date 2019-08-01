@@ -33,11 +33,6 @@ sub print {
     push @{ $self->_body }, map { encode_utf8($_) } @_;
 }
 
-sub login {
-    my ( $self, $user ) = @_;
-    $self->env->{'act.auth.login'}->($self->response, $user);
-}
-
 sub send_http_header {
     my ( $self, $content_type ) = @_;
 
