@@ -2,6 +2,7 @@ package Act::User;
 use strict;
 use base qw( Act::Object );
 
+use Act::Auth::Password;
 use Act::Config;
 use Act::Country;
 use Act::Object;
@@ -324,7 +325,7 @@ sub create {
 
     my $part = delete $args{participation};
     my $password = delete $args{password};
-    $args{passwd} = $class->_crypt_password($password)
+    $args{passwd} = Act::Auth::Password::_crypt_password($password)
         if defined $password;
     my $user = $class->SUPER::create(%args);
     if ($user && $part && $Request{conference}) {
