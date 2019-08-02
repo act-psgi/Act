@@ -24,3 +24,6 @@ var
 /Act-*
 # Test coverage results
 /cover_db
+# Act manual
+/wwwdocs/manual
+/wwwdocs/mandocs

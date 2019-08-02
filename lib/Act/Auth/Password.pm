@@ -50,9 +50,22 @@ sub _sha_pass ($pass) {
 
 # ----------------------------------------------------------------------
 
-=head2 Method check_password
+=head2 check_password ($login,$password)
 
+This method takes a login name and a plaintext password and checks
+them against the user database.
 
+If the user database contains a legacy, MD5 hashed password, it uses
+the plaintext password to update the user's entry in the database to
+the current password protection schema
+L<Authen::Passphrase::BlowfishCrypt>.
+
+In case of a bad login the method dies.
+
+This method does I<not> user authorization, this has to be done by the
+caller.  In case of a new user registration, or a password reset
+operation, the sessions are not authenticatied, but the request is
+protected with an one-time token.
 
 =cut
 
@@ -97,23 +110,25 @@ Act::Auth::Password -  Manage password authentication for Act users
 
 =head1 SYNOPSIS
 
+    Act::Auth::Password->set_password($login,$secret);
+    # later...
+    Act::Auth::Password->check_password($login,$secret);
+
 =head1 DESCRIPTION
+
+This module handles Act's password authentication: It writes user
+password properly salted and encrypted to the database, and can check
+them later.
 
 =head1 DIAGNOSTICS
 
-=head1 EXAMPLES
-
-=head1 ENVIRONMENT
-
-=head1 FILES
-
-=head1 CAVEATS
-
-=head1 BUGS
-
-=head1 RESTRICTIONS
+In case of errors, the subrouties in this module die and provide the
+caller with an appropriate error information.
 
 =head1 NOTES
+
+Parts of this module have been moved from L<Act::User> and
+L<Act::Middleware::Auth>.
 
 =head1 AUTHOR
 

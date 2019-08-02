@@ -242,9 +242,9 @@ care to export them as globals to all modules using it.
 The C<LOGIN> url is a special case because it is not an URL you would
 type into a browser but rather the action attribute of a form element.
 In legacy code, this was handled as a special case in the Apache
-configuration.  Here we treat it "like HTML files", because all it
-needs is an application which passes through the
-L<Act::Middleware::Auth> layer as a "public" handler.
+configuration, early PSGI implementations handled it in the middleware
+layer.  Today it is a regular Act handler.
+
 
 =head1 Maintainer's Introduction to PSGI and Plack
 

@@ -72,14 +72,18 @@ my %uris = (
     baz => 'foo',
 );
 
+use Act::Config;
 my $cfg = Test::MockObject->new;
 $cfg->set_always(uris => \%uris)
     ->set_always(home => 'testhome')
     ->set_always(general_root => 'testhome')
-    ->set_always(email_sendmail => '/usr/sbin/sendmail')
     ->set_always(database_debug => 0)
     ->set_always(conferences => { map { $_ => 1 } values %uris })
     ->set_always(general_dir_photos => 'photos')
+    ->set_always(database_dsn => $Config->database_test_dsn)
+    ->set_always(database_user => $Config->database_test_user)
+    ->set_always(database_passwd => $Config->database_test_passwd)
+    ->set_always(database_host => $Config->database_test_host)
     ;
 
 
@@ -97,7 +101,6 @@ sub mock_config {
     *Act::Util::db_connect          = sub {};
 }
 
-use Act::Config;
 $Config = mock_config;
 
 require Act::Dispatcher;

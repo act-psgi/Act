@@ -63,23 +63,35 @@ Test::Act::Config - Mock Act's configuration
 
 =head1 SYNOPSIS
 
+    use Act::Config ();
+    use Test::Act::Config;
+    $Act::Config::Config = Test::Act::Config->new;
+    require Act::Module::Which::Needs::Mocked::Config # don't "use"!
+
 =head1 DESCRIPTION
 
-=head1 DIAGNOSTICS
-
-=head1 EXAMPLES
+This class provides a default surrogate for Act's $Config hash.  Per
+default, it picks up the connection attributes for the test database
+and pulls all other configuration variables from the "real"
+configuration.
 
 =head1 ENVIRONMENT
 
 =head1 FILES
 
+The Act configuration files are evaluated as usual and left unchanged.
+
 =head1 CAVEATS
+
+Since the manipulation of the configuration happens at runtime, it
+isn't effective for any modules which are "use"d at compile time.  So
+either "require" them, or wrap the "use" into an eval block.
 
 =head1 BUGS
 
 =head1 RESTRICTIONS
 
-=head1 NOTES
+Mocking other configuration variables isn't documented.
 
 =head1 AUTHOR
 

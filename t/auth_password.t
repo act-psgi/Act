@@ -25,7 +25,7 @@ use Test::Act::Config;
 $Act::Config::Config = Test::Act::Config->new;
 
 # Load the module to be tested for the methods
-use Act::Auth::Password;
+require Act::Auth::Password; # 'use' would pick up the unmocked config
 # Add the user we're operating on, ignoring any errors
 my $schema = Act::Store::Database->instance->schema;
 my $users = $schema->resultset('User');
@@ -38,6 +38,7 @@ my $user = $schema->resultset('User')->create({
     email => 'adam@home',
     timezone => 'Europe/Paris',
 });
+
 
 ## Tests start here ----------------------------------------------------
 # Part 1: Using the current password encryption

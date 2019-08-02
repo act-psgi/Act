@@ -77,23 +77,33 @@ Act::Handler::User::CheckLogin -  Collect user credentials and have them checked
 
 =head1 SYNOPSIS
 
+In Act's L<Act::Dispatcher>:
+
+    $public_handlers{LOGIN} = 'Act::Handler::User::CheckLogin';
+
 =head1 DESCRIPTION
+
+This module is a Handler in Act which receives user credentials from
+the login form and processes them against Act's user database.
+
+The names of the credentials must match the field names in the
+template F<templates/login>, as documented in
+L<Act::Manual::Developer::Templates>.
 
 =head1 DIAGNOSTICS
 
-=head1 EXAMPLES
-
-=head1 ENVIRONMENT
-
-=head1 FILES
-
-=head1 CAVEATS
-
-=head1 BUGS
+In case of a bad login, the handler collects information for the
+logger (which is pretty much underused in all other modules), collects
+harmless error information for the user, and cycles back to the login
+handler.
 
 =head1 RESTRICTIONS
 
+So far, password authentication is the only mechanism supported by Act.
+
 =head1 NOTES
+
+Parts of this handler have been moved from L<Act::Middleware::Auth>.
 
 =head1 AUTHOR
 

@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-
+use 5.020;
 
 use ExtUtils::MakeMaker;
 
@@ -39,6 +39,7 @@ my %WriteMakefileArgs = (
     "bin/twostep_purge"
   ],
   "LICENSE" => "perl",
+  "MIN_PERL_VERSION" => "5.020",
   "NAME" => "Act",
   "PREREQ_PM" => {
     "AppConfig" => 0,
@@ -47,6 +48,8 @@ my %WriteMakefileArgs = (
     "Carp" => 0,
     "Clone" => 0,
     "DBI" => 0,
+    "DBIx::Class::Core" => 0,
+    "DBIx::Class::Schema" => 0,
     "DBIx::Connector" => 0,
     "Data::Dumper" => 0,
     "Data::ICal" => 0,
@@ -94,6 +97,7 @@ my %WriteMakefileArgs = (
     "Locale::Maketext::Lexicon" => 0,
     "Module::Pluggable::Object" => 0,
     "Moo" => 0,
+    "MooX::Singleton" => 0,
     "Net::OpenID::Server" => 0,
     "Plack::App::Cascade" => 0,
     "Plack::App::File" => 0,
@@ -103,6 +107,9 @@ my %WriteMakefileArgs = (
     "Plack::Middleware::Debug" => 0,
     "Plack::Request" => 0,
     "Plack::Response" => 0,
+    "Plack::Session" => 0,
+    "Plack::Session::State::Cookie" => 0,
+    "Plack::Session::Store::DBI" => 0,
     "Plack::Util" => 0,
     "Plack::Util::Accessor" => 0,
     "Pod::POM" => 0,
@@ -137,6 +144,7 @@ my %WriteMakefileArgs = (
     "YAML" => 0,
     "base" => 0,
     "constant" => 0,
+    "feature" => 0,
     "lib" => 0,
     "parent" => 0,
     "strict" => 0,
@@ -149,6 +157,7 @@ my %WriteMakefileArgs = (
     "Exporter" => 0,
     "ExtUtils::MakeMaker" => 0,
     "File::Spec" => 0,
+    "Plack::Session::Store" => 0,
     "Plack::Test" => 0,
     "Test" => 0,
     "Test::Builder" => 0,
@@ -177,6 +186,8 @@ my %FallbackPrereqs = (
   "Carp" => 0,
   "Clone" => 0,
   "DBI" => 0,
+  "DBIx::Class::Core" => 0,
+  "DBIx::Class::Schema" => 0,
   "DBIx::Connector" => 0,
   "Data::Dumper" => 0,
   "Data::ICal" => 0,
@@ -227,6 +238,7 @@ my %FallbackPrereqs = (
   "Locale::Maketext::Lexicon" => 0,
   "Module::Pluggable::Object" => 0,
   "Moo" => 0,
+  "MooX::Singleton" => 0,
   "Net::OpenID::Server" => 0,
   "Plack::App::Cascade" => 0,
   "Plack::App::File" => 0,
@@ -236,6 +248,10 @@ my %FallbackPrereqs = (
   "Plack::Middleware::Debug" => 0,
   "Plack::Request" => 0,
   "Plack::Response" => 0,
+  "Plack::Session" => 0,
+  "Plack::Session::State::Cookie" => 0,
+  "Plack::Session::Store" => 0,
+  "Plack::Session::Store::DBI" => 0,
   "Plack::Test" => 0,
   "Plack::Util" => 0,
   "Plack::Util::Accessor" => 0,
@@ -282,6 +298,7 @@ my %FallbackPrereqs = (
   "base" => 0,
   "charnames" => 0,
   "constant" => 0,
+  "feature" => 0,
   "lib" => 0,
   "open" => 0,
   "parent" => 0,
