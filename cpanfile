@@ -5,6 +5,7 @@ requires 'Clone'                      => 0;
 requires 'DBD::Pg'                    => 3;
 requires 'DBI'                        => 0;
 requires 'DBIx::Class'                => 0;
+requires 'DBIx::Connector'            => 0;
 requires 'Data::ICal'                 => 0.16;
 requires 'Data::ICal::DateTime'       => 0;
 requires 'Data::ICal::Entry::Event'   => 0;
