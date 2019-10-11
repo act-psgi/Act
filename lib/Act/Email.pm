@@ -53,6 +53,7 @@ sub send
     my $from = Email::Address->new(@from);
     push @headers, ( From => $from->format() );
     chomp $args{subject};
+    $args{subject} = Encode::encode('MIME-Header',$args{subject});
 
     # if testing, send it to the tester's email address
     # with the original recipients prepended to the message body
