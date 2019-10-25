@@ -22,7 +22,7 @@ sub call {
         return Act::Handler::Login->new->call($env);
     }
 
-    $env->{'act.user'} = Act::User->new( login => $login );
+    $login  and  $env->{'act.user'} = Act::User->new( login => $login );
     $self->app->($env);
 }
 
