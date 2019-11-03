@@ -4,8 +4,9 @@ package main; # Make Devel::PerlySense happy
 ## Test environment
 use Test::More 0.98 tests => 20;
 use Digest::MD5;
-
 use Test::Lib;
+
+use Act::Store::Database; # For cleanup
 
 use utf8; # for our test passwords
 
@@ -85,3 +86,6 @@ for my $type (qw(ascii iso_latin)) {
     ok(Act::Auth::Password->check_password($login,$password),
        "Legacy $type Password is fine after upgrade");
 }
+
+CLEANUP:
+{ $users->find( { login => $login } )->delete; };
