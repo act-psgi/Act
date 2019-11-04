@@ -414,8 +414,12 @@ sub _get
 sub _load_config
 {
     my ($cfg, $dir) = @_;
+
     for my $file (qw< act local >) {
         my $path = catfile($dir, 'conf', "$file.ini");
+        if (-d $path) {
+            die "$path is a directory, please refer to the documentation\n";
+        }
         if (-e $path) {
             open my $fh, '<:encoding(UTF-8)', $path
                 or die "can't open $path: $!\n";
