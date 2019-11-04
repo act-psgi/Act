@@ -28,3 +28,7 @@ Also interesting, but out of focus right now:
   * Moving Act to a web application framework
   * Feature enhancements
 
+Technical documentation about Act is available in the directory
+lib/Act/Manual.  The pod files can be nicely read in GitHub, and even
+more comfortably online from our demo server at
+https://act-test.plix.at/manual/Manual.html.
