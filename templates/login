@@ -47,10 +47,10 @@
 
 </form>
 
+<p>[% loc('Forgot your password?', make_uri('changepwd')) %]</p>
+
 <p>
-  <a href="[% make_uri('changepwd') %]">
-  [% loc('Forgot your password?') %]
-  </a>
+ [% loc('This site uses cookies to authenticate logged in users.', domain) %]
 </p>
 
 </center>
