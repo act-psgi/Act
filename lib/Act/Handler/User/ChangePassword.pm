@@ -67,11 +67,13 @@ sub handler
         $fields = $form->{fields};
 
         my ($token, $token_data);
-        if ($Request{user}) { # 
+        my $login;
+        if ($Request{user}) { #
+            $login = $Request{user}->login;
             # compare passwords
             try {
                 Act::Auth::Password->check_password(
-                    $Request{user}->login,$fields->{oldpassword}
+                    $login,$fields->{oldpassword}
                 );
             }
             catch {
@@ -96,10 +98,11 @@ sub handler
                 my $user = Act::User->new(user_id => $token_data)
                     or die "unknown user_id: $token_data\n";
                 Act::TwoStep::remove($token);
+                $login = $user->login;
                 Plack::Session->new($env)->set(login => $user->login);
             }
             # update user
-            Act::Auth::Password->set_password( $Request{user}->login,
+            Act::Auth::Password->set_password( $login,
                                                $fields->{newpassword1} );
 
             # redirect to user's main page
