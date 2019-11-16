@@ -162,7 +162,6 @@ sub conference_app {
             my $path = catfile($Config->general_dir_conferences, $conf, 'wwwdocs');
             my $files = Plack::App::File->new(root => $path)->to_app;
             my $res = $files->($env);
-            $res->[0] = 99 if $res->[0] == 404;
             return $res;
         }
     };
