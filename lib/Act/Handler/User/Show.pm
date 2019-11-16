@@ -59,7 +59,7 @@ sub handler
         bio => \%bio,
         conferences => [ grep { $_->{participation} } @{$user->conferences()} ],
         mytalks => $user->my_talks,
-        photo_uri => join ('/', undef, 'userphoto', $user->photo_name),
+        photo_uri => join ('/', undef, 'photos', $user->photo_name),
     );
     $template->process('user/show');
     return;

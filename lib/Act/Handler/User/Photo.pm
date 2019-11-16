@@ -110,7 +110,7 @@ sub handler {
     $template->variables(
         error     => $error,
         formats   => [sort keys %Act::Config::Image_formats],
-        photo_uri => join ('/', undef, 'userphoto', $Request{user}{photo_name}),
+        photo_uri => join ('/', undef, 'photos', $Request{user}{photo_name}),
     );
     $template->process('user/photo');
     return;
