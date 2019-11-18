@@ -79,7 +79,6 @@ my %private_handlers = (
 
 sub to_app {
     Act::Config::reload_configs();
-    my $conference_app = conference_app();
     my $app            = builder {
         enable 'Debug', panels => [split(/\s+/, $ENV{ACT_DEBUG})]
             if $ENV{ACT_DEBUG};
@@ -121,20 +120,6 @@ sub to_app {
                 $conference_app->($env);
             };
         };
-        #for my $dir (qw(js css images)) {
-        #    my $path = $Config->general_dir_static;
-        #    mount "/$dir/" => sub {
-        #        my $env  = shift;
-        #        my $files = Plack::App::File->new(root => catfile($path, $dir))->to_app;
-        #        return $files->($env);
-        #    };
-        #}
-        mount '/userphoto/' => sub {
-            my $env  = shift;
-            my $path = $Config->general_dir_photos;
-            my $files = Plack::App::File->new(root => $path)->to_app;
-            return $files->($env);
-        };
         mount "/" => sub {
             my $env  = shift;
             my $files = Plack::App::File->new(root => $Config->general_dir_static)->to_app;
@@ -146,7 +131,6 @@ sub to_app {
 
 sub conference_app {
     my $conference = shift;
-    my $path = catfile($Config->home, $conference, 'wwwdocs');
     my $static_app = builder {
         enable '+Act::Middleware::Auth';
         Act::Handler::Static->new->to_app;
@@ -156,59 +140,33 @@ sub conference_app {
         enable sub {
             my $app = shift;
             sub {
-                for ( $_[0]->{'PATH_INFO'} ) {
-                    if ( s{^/?$}{/index.html} || /\.html$/) {
-                        warn "$_[0]->{PATH_INFO} to static";
-                        return $static_app->(@_);
-                    }
-                    else {
-                        warn "$_[0]->{PATH_INFO} to app";
-                        return $app->(@_);
-                    }
+                $_[0]->{PATH_INFO} =~ s{^/?$}{/index.html};
+                if ($_[0]->{PATH_INFO} =~ /\.html$/) {
+                    return $static_app->(@_);
+                }
+                else {
+                    return $app->(@_);
                 }
             };
         };
-        Plack::App::Cascade->new( catch => [99], apps => [
-            builder {
-                for my $uri ( keys %public_handlers ) {
-                    mount "/$uri" => _handler_app($public_handlers{$uri});
-                }
-                for my $uri ( keys %private_handlers ) {
-                    mount "/$uri" => _handler_app($private_handlers{$uri},
-                                                  private => 1);
-                }
-                mount '/' => sub { [99, [], []] };
-            },
-            builder {
-                enable sub {
-                    my ( $app ) = @_;
-                    return sub {
-                        my ( $env ) = @_;
-
-                        my $conf = $env->{'act.conference'};
-                        my $path = catfile($Config->general_dir_conferences, $conf, 'wwwdocs');
-                        my $files = Plack::App::File->new(root => $path)->to_app;
-                        my $res = $files->($env);
-                        $res->[0] = 99 if $res->[0] == 404;
-                        return $res;
-                    }
-                };
-                enable sub {
-                    Plack::App::File->new(root => $path)->to_app;
-                };
-                mount '/' => sub { [404, [], ["You're lost."]] };
-            },
-            builder {
-                enable '+Act::Middleware::Auth', private => 1;
-                for my $uri ( keys %private_handlers ) {
-                    mount "/$uri" => _handler_app($private_handlers{$uri});
-                }
-                mount '/' => sub { [404, [], []] };
-            },
-            Plack::App::File->new(root => $path)->to_app,
-        ] );
+        for my $uri ( keys %public_handlers ) {
+            mount "/$uri" => _handler_app($public_handlers{$uri});
+        }
+        for my $uri ( keys %private_handlers ) {
+            mount "/$uri" => _handler_app($private_handlers{$uri},
+                                          private => 1);
+        }
+        mount '/' => sub {
+            my ( $env ) = @_;
+            my $conf = $env->{'act.conference'};
+            my $path = catfile($Config->general_dir_conferences, $conf, 'wwwdocs');
+            my $files = Plack::App::File->new(root => $path)->to_app;
+            my $res = $files->($env);
+            return $res;
+        }
     };
 }
+
 
 sub root_file_app {
     my ($rel_path) = @_;
