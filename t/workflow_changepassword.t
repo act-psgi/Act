@@ -12,7 +12,7 @@ use Test::Act::Environment;
 my $testenv     = Test::Act::Environment->new;
 my $smtp_server = $testenv->smtp_server;
 my $base        = $testenv->base;
-my $mech        = $testenv->mech;
+my $mech        = $testenv->new_mech;
 
 use Act::Store::Database;
 
@@ -39,13 +39,13 @@ SKIP:
     my $initial_password;
     {
         # Preparations - register user
-        $mech->post(_url("register"),{ email => $attendee->{email},
-                                       twostepsubmit => 1,
-                                 } );
+        my $register_url = _url("register");
+        $mech->post($register_url,{ email => $attendee->{email},
+                                    twostepsubmit => 1,
+                                } );
         is ($mech->title,'Confirmation email sent',
             "Confirmation email sent")
             or skip "*** Giving up: No confirmation email sent";
-        my $register_url = _url("register");
         my $register_code_url;
         my $mail = $smtp_server->next_mail();
         my $mailtext = $mail->{message};

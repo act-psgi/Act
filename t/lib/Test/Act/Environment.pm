@@ -9,9 +9,9 @@ use namespace::clean;
 use feature qw(signatures);
 no warnings qw(experimental::signatures);
 
+use Carp qw(croak);
 use File::Temp qw(tempdir);
 use File::Copy::Recursive qw(dircopy);
-
 use FindBin qw($RealBin);
 FindBin::again();
 
@@ -24,6 +24,10 @@ my $tempdir;
 
 # This needs to happen _before_ Act::Config is used...
 BEGIN {
+
+    if (exists $INC{'Act/Config.pm'}) {
+        croak __PACKAGE__, " needs to be loaded before Act::Config.\n";
+    }
     $tempdir = File::Temp->newdir( CLEANUP => 0 );
     # The following will need adaption to the post-november master
     # Part 1: Link the distribution files from the repository so that
@@ -50,20 +54,6 @@ $Config->set(email_hostname => 'localhost');
 $Config->set(email_port     => $smtp_server->port);
 
 
-has mech => (
-    is => 'rwp', isa => InstanceOf['Test::WWW::Mechanize'],
-    builder => 'build_mech',
-    documentation =>
-        'A test client for the application tests',
-);
-
-sub build_mech ($self) {
-    require Act::Dispatcher;
-    my $mech = Test::WWW::Mechanize::PSGI->new(app => Act::Dispatcher->to_app);
-    $self->_set_mech($mech);
-    return $mech;
-}
-
 has base => (
     is => 'ro', isa => Str,
     builder => '_build_base',
@@ -84,27 +74,6 @@ has home => (
         'Where $ENV{ACTHOME} will point to',
 );
 
-sub _build_acthome ($self) {
-    my $tempdir = File::Temp->newdir( CLEANUP => 0 );
-    # The following will need adaption to the post-november master
-    # Part 1: Link the distribution files from the repository so that
-    # changes become immediately visible
-    for my $dir (qw(templates po wwwdocs)) {
-        symlink "$RealBin/../$dir","$tempdir/$dir"
-            or die "Failed to create a symlink for '$RealBin/../$dir': '$!'";
-    }
-    # Part 2: Copy the files from the test environment
-    for my $dir (qw(actdocs conf)) {
-        dircopy "$RealBin/acthome/$dir","$tempdir/$dir";
-    }
-    # Part 3: These must just exist
-    for my $dir (qw(photos ttc)) {
-        mkdir "$tempdir/$dir" or die "Could not create '$tempdir/$dir': '$!'";
-    }
-    $ENV{ACTHOME} = $tempdir;
-    return "$tempdir";
-}
-
 has smtp_server => (
     is => 'ro', isa => InstanceOf['Test::Act::SMTP::Server'],
     default => sub { $smtp_server },
@@ -116,9 +85,8 @@ has smtp_server => (
 # ----------------------------------------------------------------------
 
 sub new_mech ($self) {
-    my $mech = Test::WWW::Mechanize::PSGI->new(app => Act::Dispatcher->to_app);
-    $self->_set_mech($mech);
-    return $mech;
+    require Act::Dispatcher;
+    return Test::WWW::Mechanize::PSGI->new(app => Act::Dispatcher->to_app);
 }
 
 1;
@@ -161,13 +129,12 @@ application-level testing of Act.  It provides the folliwing helpers:
 
 =over
 
-=item base - a directory suited for C<$ENV{ACTHOME}>
+=item home - a directory suited for C<$ENV{ACTHOME}>
 
 This directory is contains a minimal setup of the files and
 directories to run Act.  It is a temporary directory, so tests may
 alter files therein (in particular, act.ini), at will to suit their
 tests.
-B<This is especially true if you don't have a local database connection.>
 
 Later, utilities to munge parts of act.ini might be available with
 this module.
@@ -175,7 +142,7 @@ this module.
 =item smtp_server - a tiny handler for mails sent by Act
 
 This server captures mails sent by act
-I<for the current test run only>
+I<for the current test environment only>
 by manipulating the configuration in L<Act::Email>.  It does not
 collide with a "real" SMTP server or with other tests running in
 parallel.
@@ -183,21 +150,19 @@ parallel.
 The server is for automated tests only, all mails are gone after the
 test ends.
 
-=item mech - A L<Test::WWW::Mechanize::PSGI> object to run the test.
-
-This might be extended later to allow HTTP-tests over the network buy
-just replacing the mech by a L<Test::WWW::Mechanize> object.
-
 =back
 
 =head1 METHODS
 
-=head2 Method new_mech
+=head2 $testenv->new_mech
 
-Replaces the mech object by a fresh one, thereby killing the cookie
-jar and starting with a fresh history
+This method provides you with a fresh web client based on
+L<Test::WWW::Mechanize>.
 
-=cut
+=head1 DIAGNOSTICS
+
+The module dies if it detects that L<Act::Config> has already been
+loaded.
 
 =head1 ENVIRONMENT
 
