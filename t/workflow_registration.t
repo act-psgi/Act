@@ -14,7 +14,7 @@ use Act::Store::Database;
 my $testenv     = Test::Act::Environment->new;
 my $smtp_server = $testenv->smtp_server;
 my $base        = $testenv->base;
-my $mech        = $testenv->mech;
+my $mech        = $testenv->new_mech;
 
 my $conference = 'testing';
 my $register_url = "$base/$conference/register";
@@ -99,7 +99,7 @@ SKIP:
     # next step
     my $initial_password;
     {
-        $mech = $testenv->build_mech;
+        $mech = $testenv->new_mech;
         # Now use the registration code from the previous step
         $mech->get_ok($register_code_url,
                       "Register data form accessible")
@@ -169,7 +169,7 @@ SKIP:
     }
     # Duplicate registration
     {
-        $mech = $testenv->build_mech;
+        $mech = $testenv->new_mech;
         $mech->get_ok($register_url,
                       'Error handling: Start registering yet again');
         $mech->submit_form_ok( { form_number => 1,
