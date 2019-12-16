@@ -114,10 +114,13 @@ requires "vars" => "0";
 requires "warnings" => "0";
 
 on 'test' => sub {
+  requires "Data::Dump" => "0";
   requires "DateTime::Locale" => "0";
   requires "Exporter" => "0";
   requires "ExtUtils::MakeMaker" => "0";
+  requires "File::Copy::Recursive" => "0";
   requires "File::Spec" => "0";
+  requires "IO::Socket::INET" => "0";
   requires "Path::Tiny" => "0";
   requires "Plack::Session::Store" => "0";
   requires "Plack::Test" => "0";
@@ -131,9 +134,13 @@ on 'test' => sub {
   requires "Test::MockModule" => "0";
   requires "Test::MockObject" => "0";
   requires "Test::More" => "0.98";
+  requires "Test::Needs" => "0";
   requires "Test::Pod" => "0";
+  requires "Test::WWW::Mechanize::PSGI" => "0";
+  requires "Time::HiRes" => "0";
   requires "YAML::Tiny" => "0";
   requires "charnames" => "0";
+  requires "namespace::clean" => "0";
   requires "open" => "0";
 };
 
