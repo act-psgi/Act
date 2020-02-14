@@ -305,4 +305,11 @@ CREATE TABLE tags
     tagged_id     text NOT NULL
 );
 
+/* sessions - new in version 12 */
+DROP   TABLE sessions $cascade;
+CREATE TABLE sessions
+(
+    id             CHAR(72) PRIMARY KEY,
+    session_data   TEXT
+);
 EOF
