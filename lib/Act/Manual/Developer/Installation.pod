@@ -98,7 +98,7 @@ an easy setup is to use a port-based virtual host:
     </VirtualHost>
 
 Create the directory where photos will be uploaded, by default
-F<$ACTHOME/wwwdocs/photos>. Make sure it is readable by all, and
+F<$ACT_HOME/wwwdocs/photos>. Make sure it is readable by all, and
 writable by the user running Apache.
 
 =head2 Setting up the Act databases
@@ -142,7 +142,7 @@ Run wiki-toolkit-setupdb to create the tables in database actwiki.
 
     $ wiki-toolkit-setupdb --type postgres --name actwiki --user act --pass xyzzy
 
-Update F<$ACTHOME/conf/act.ini> (or F<$ACTHOME/conf/local.ini>) with the
+Update F<$ACT_HOME/conf/act.ini> (or F<$ACT_HOME/conf/local.ini>) with the
 database names and credentials.
 
     [database]
@@ -180,14 +180,14 @@ To make sure that your system has all the requirements to run Act,
 and that Act works correctly on it, you can now run Act's test suite.
 This test suite requires Test::More.
 
-    cd $ACTHOME
+    cd $ACT_HOME
     make test
 
 =head1 Adding a new conference
 
 Decide the name of your conference. We'll use act-2004 as an example.
 
-  $ACTHOME/
+  $ACT_HOME/
       actdocs/
         act-2004/
           conf/             # local configuration

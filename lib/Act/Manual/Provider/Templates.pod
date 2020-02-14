@@ -13,14 +13,14 @@ To do so, perform the following steps:
 
 =over 4
 
-=item Create a directory C<static> under $ACTHOME.
+=item Create a directory C<static> under $ACT_HOME.
 
 =item In that directory, write your content to a file F<error404>.
 
 =back
 
 So, the full path to your custom template is
-F<$ACTHOME/static/error404>.  This template is processed with Act's
+F<$ACT_HOME/static/error404>.  This template is processed with Act's
 Template Toolkit, therefore you can use the templates in the
-F<$ACTHOME/templates> directory, but it has I<no access> to
+F<$ACT_HOME/templates> directory, but it has I<no access> to
 configuration data nor to templates customized for a conference.
