@@ -9,7 +9,8 @@ RUN apt-get update \
 COPY cpanfile .
 
 # known failure thing
-RUN cpanm -n IPC::System::Simple \
+RUN cpanm --notest IPC::System::Simple \
+    && cpanm --notest XML::Atom \
     && cpanm --installdeps .
 
 COPY wwwdocs     /opt/acthome/wwwdocs
