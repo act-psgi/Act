@@ -10,6 +10,7 @@ use Digest::MD5 ();
 use Try::Tiny;
 use URI::Escape ();
 use Unicode::Normalize ();
+use Unicode::Collate;
 
 use vars qw(@ISA @EXPORT @EXPORT_OK %Languages);
 @ISA    = qw(Exporter);
@@ -29,7 +30,7 @@ my %grams = (
 my @pass = qw( vcvcvc cvcvcv cvcvc vcvcv );
 
 # normalize() stuff
-my (%ncache, %chartab);
+my (%chartab);
 BEGIN {
     my %accents = (
         a => 'àáâãäåȧāą',
@@ -57,8 +58,6 @@ BEGIN {
         $chartab{$_} = $cclass for ($letter, uc($letter), @accented);
     }
 }
-# normalize() exceptions
-my @normalize_exceptions = ( 'й' );
 
 sub search_expression
 {
@@ -241,47 +240,20 @@ sub localize {
     return join("$/", @_);
 }
 
-# normalize a string for sorting
-sub normalize
-{
-    my $string = shift;
-    return $ncache{$string} if exists $ncache{$string};
-    my $copy = $string;
-    $string = Unicode::Normalize::NFD($string);
-    $string =~ s/\p{InCombiningDiacriticalMarks}//g;
-    for my $chr (@normalize_exceptions) {
-        my $pos = 0;
-        while (($pos = index($copy, $chr, $pos)) >= 0) {
-            substr($string, $pos, 1) = $chr;
-            ++$pos;
-        }
-    }
-    return $ncache{$string} = lc $string;
-}
-
 # unicode-aware string sort
 sub usort(&@)
 {
     my $code = shift;
     my $getkey = sub { local $_ = shift; $code->() };
 
-    # use Unicode::Collate if allkeys.txt is installed
-    eval {
-        require Unicode::Collate;
-        # new() dies if allkeys.txt isn't installed
-        my $collator = Unicode::Collate->new();
+    my $collator = Unicode::Collate->new();
 
-        return map  { $_->[1] }
-               sort { $collator->cmp( $a->[0], $b->[0] ) }
-               map  { [ $getkey->($_), $_ ] }
-               @_;
-    };
-    # fallback to normalize()
     return map  { $_->[1] }
-           sort { $a->[0] cmp $b->[0] }
-           map  { [ normalize($getkey->($_)), $_ ] }
-           @_;
+        sort { $collator->cmp( $a->[0], $b->[0] ) }
+        map  { [ $getkey->($_), $_ ] }
+        @_;
 }
+
 
 sub ua_isa_bot {
     $Request{r}->header_in('User-Agent') =~ /
@@ -424,8 +396,7 @@ to lowercase.
 =item usort
 
 Sorts a list of strings with correct Unicode semantics, as provided
-by C<Unicode::Collate>. If the Unicode Collation Element Table is not
-installed, C<usort> falls back to comparing normalized strings.
+by C<Unicode::Collate>.
 
 =item ua_isa_bot
 
