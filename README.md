@@ -7,6 +7,22 @@ Apache.
 
 # Running the development environment
 
+Depending on your preferences, there are two ways to setup and run an
+environment for developing and testing Act.  If you prefer to run
+tests on your desktop, on a dedicated virtual machine or bare metal,
+you should check out
+[act-starter-debian](https://https://github.com/act-psgi/act-starter-debian).
+This is a set of shell procedures which creates a complete Act
+environment including a PostgreSQL database and a source checkout, and
+is regularly tested to work on bare [Vagrant](vagrantup.com/) boxes
+for current Debian and Ubuntu systems.
+
+If you prefer a [dockerized](http://www.docker.com/) environment with
+separate containers for Act, the database, and a mail server: This is
+already included in the Act repository.  Read on how to setup and
+maintain it.
+
+
 ## TL;DR
 
 ```
