@@ -11,7 +11,7 @@ hierarchy unchanged throughout this process.  The author has, however,
 no idea about the directory structure on the "original" server
 L<https://act.yapc.eu/>: The layout described here is one which fits
 with the PSGI-based implementations at
-L<https://github.com/act-testing/Act>.
+L<https://github.com/act-psgi/Act>.
 
 Throughout this document, we use L<https://act.yapc.eu/> as the base
 URL, though Act software has been used on other servers, too.
