@@ -220,9 +220,6 @@ sub load_configs
         $ConfConfigs{$conf} = _init_config($home);
         _load_global_config($ConfConfigs{$conf}, $home);
 
-        _load_config($ConfConfigs{$conf}, catfile($home, 'actdocs', $conf));
-
-        # dockerize
         _load_config($ConfConfigs{$conf},
             catfile($GlobalConfig->general_dir_conferences, $conf, 'actdocs'));
 
