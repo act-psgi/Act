@@ -196,7 +196,7 @@ should you ever use PostgreSQL for other purposes.
 =head2 Fix the config.ini files
 
 The main config file is expected to be in C<$ACT_HOME/conf/act.ini>.  Copy
-the template from the checkout file C<eg/conf/act.ini> to that place
+the template from the checkout file C<etc/act.ini.dist> to that place
 and fix everything where you find C<FIXME> as a value.  Add the database
 user and password as provided in the previous step (we don't open
 everything up, remember?).
