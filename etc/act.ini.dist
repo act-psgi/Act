@@ -5,6 +5,7 @@ searchlimit = 20
 
 dir_conferences = $(home)/conferences
 dir_photos      = /opt/filestore/
+dir_static      = $(home)/wwwdocs
 dir_ttc         = $(home)/var
 root            = $(home)
 
