@@ -26,7 +26,7 @@
       <a href="/manual/Manual.html">Act Manual</a> for this fork.
     </p>
     <p>Site admins may override this error page by creating a
-      directory <tt>$ACTHOME/static</tt> and creating a
+      directory <tt>$ACT_HOME/static</tt> and creating a
       template <tt>error404</tt> in that directory.
     </p>
 

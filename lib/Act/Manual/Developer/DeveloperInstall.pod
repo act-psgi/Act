@@ -108,7 +108,7 @@ lost after a software update.
 
 Following the FHS, you can chose C</var/opt/Act>, or C<~/var/opt/Act>
 (or whereever you like).  Create this directory.  This directory will
-be made known to Act as C<$ENV{ACTHOME}> later.
+be made known to Act as C<$ENV{ACT_HOME}> later.
 
   mkdir --parents ~/var/opt/Act
 

@@ -190,7 +190,14 @@ load_configs() unless $^C;
 
 sub load_configs
 {
-    my $home = $ENV{ACTHOME} // $ENV{ACT_HOME};
+    my $home = $ENV{ACT_HOME};
+    # Check for deprecated ACTHOME environment variable
+    if (! defined $home  &&
+            defined $ENV{ACTHOME}  &&  -d $ENV{ACTHOME}) {
+        warn "Environment variable ACTHOME is deprecated." .
+            " Use ACT_HOME instead.";
+        $home = $ENV{ACTHOME};
+    }
     die "ACT_HOME environment variable isn't set\n" unless $home;
     $GlobalConfig = _init_config($home);
     %ConfConfigs = ();

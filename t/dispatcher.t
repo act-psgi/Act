@@ -127,7 +127,7 @@ subtest "Paths without a conference path" => sub {
     {
         # The root directory also holds the user photos, located
         # at a configurable directory.  Can be configured as an
-        # absolute path, or relative to $ACTHOME.
+        # absolute path, or relative to $ACT_HOME.
         my $path = '/photos/camel.jpg';
         my $photo_dir = $Config->general_dir_photos;
         my %report  = $driver->request(GET $path);

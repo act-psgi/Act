@@ -193,7 +193,7 @@ pod2usage(1) if $help;
 $acthome ||= "$Bin/..";
 $baseurl ||= '';
 my $srcdir  = catfile($acthome, "lib/Act");
--d $srcdir or pod2usage("Can't determine ACTHOME");
+-d $srcdir or pod2usage("Can't determine ACT_HOME");
 my $destdir = shift or pod2usage("You must specify a destination directory!");
 
 # create POD parser and view and template objects
@@ -281,7 +281,7 @@ makedoc - build HTML tree from Act's POD documenation (Act::Manual)
 makedoc [options] destination_directory
 
  Options:
-   -a, --acthome <acthome>     specify alternate ACTHOME
+   -a, --acthome <acthome>     specify alternate ACT_HOME
    --baseurl <url>             specify static resource root URL
    -f, --force                 force rebuild (ignore timestamps)
    -h, --help                  prints brief help text
