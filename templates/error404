@@ -16,7 +16,7 @@
       <a href="http://act.mongueurs.net/">French Perl Mongers</a>
       and is now developed by volunteers from all over Europe.
       <em>This</em> installation runs on a
-      <a href="https://github.com/HaraldJoerg/Act">fork</a> of the
+      <a href="https://github.com/act-psgi/Act">fork</a> of the
       original software.
     </p>
     <p>A developer installation should have the

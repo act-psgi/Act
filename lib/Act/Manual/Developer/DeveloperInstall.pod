@@ -6,7 +6,7 @@ this guide will never appear at the master branch of the original Act
 repository.
 
 For Debian systems, the following description has been implemented in the
-L<act-starter-debian|https://github.com/HaraldJoerg/act-starter-debian>
+L<act-starter-debian|https://github.com/act-psgi/act-starter-debian>
 toolkit.  The description and the toolkit might occasionally be in
 sync.
 
@@ -97,7 +97,7 @@ Clone the repository to your target directory I<without> the trailing
 C</Act> like in the following example:
 
   cd ~/opt
-  git clone https://github.com/HaraldJoerg/Act.git
+  git clone https://github.com/act-psgi/Act.git
 
 =item 3. Create a directory for the data
 
