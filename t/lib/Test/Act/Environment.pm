@@ -44,7 +44,7 @@ BEGIN {
     for my $dir (qw(photos ttc)) {
         mkdir "$tempdir/$dir" or die "Could not create '$tempdir/$dir': '$!'";
     }
-    $ENV{ACTHOME} = "$tempdir";
+    $ENV{ACT_HOME} = "$tempdir";
 }
 
 use Act::Config;
@@ -71,7 +71,7 @@ has home => (
     is => 'ro', isa => Str,
     default => sub { "$tempdir" },
     documentation =>
-        'Where $ENV{ACTHOME} will point to',
+        'Where $ENV{ACT_HOME} will point to',
 );
 
 has smtp_server => (
@@ -129,7 +129,7 @@ application-level testing of Act.  It provides the folliwing helpers:
 
 =over
 
-=item home - a directory suited for C<$ENV{ACTHOME}>
+=item home - a directory suited for C<$ENV{ACT_HOME}>
 
 This directory is contains a minimal setup of the files and
 directories to run Act.  It is a temporary directory, so tests may
