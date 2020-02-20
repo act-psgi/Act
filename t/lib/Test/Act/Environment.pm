@@ -22,14 +22,8 @@ use Test::Act::SMTP::Server;
 
 my $tempdir;
 
-# This needs to happen _before_ Act::Config is used...
-BEGIN {
-
-    if (exists $INC{'Act/Config.pm'}) {
-        croak __PACKAGE__, " needs to be loaded before Act::Config.\n";
-    }
+sub create_acthome {
     $tempdir = File::Temp->newdir( CLEANUP => 0 );
-    # The following will need adaption to the post-november master
     # Part 1: Link the distribution files from the repository so that
     # changes in the working tree become immediately effective
     for my $dir (qw(templates po wwwdocs)) {
@@ -37,7 +31,7 @@ BEGIN {
             or die "Failed to create a symlink for '$RealBin/../$dir': '$!'";
     }
     # Part 2: Copy the files from the test environment
-    for my $dir (qw(actdocs conf conferences)) {
+    for my $dir (qw(conf conferences)) {
         dircopy "$RealBin/acthome/$dir","$tempdir/$dir";
     }
     # Part 3: These must just exist
@@ -45,6 +39,15 @@ BEGIN {
         mkdir "$tempdir/$dir" or die "Could not create '$tempdir/$dir': '$!'";
     }
     $ENV{ACT_HOME} = "$tempdir";
+}
+
+# This needs to happen _before_ Act::Config is used...
+BEGIN {
+
+    if (exists $INC{'Act/Config.pm'}) {
+        croak __PACKAGE__, " needs to be loaded before Act::Config.\n";
+    }
+    create_acthome();
 }
 
 use Act::Config;
@@ -87,6 +90,39 @@ has smtp_server => (
 sub new_mech ($self) {
     require Act::Dispatcher;
     return Test::WWW::Mechanize::PSGI->new(app => Act::Dispatcher->to_app);
+}
+
+
+sub add_conference ($self,$id,$name) {
+    dircopy "$RealBin/acthome/conferences/testing",
+        "$tempdir/conferences/$id";
+
+    # Insert the name of the new conference to its act.ini
+    open (my $ini, '<', "$RealBin/acthome/conferences/testing/actdocs/conf/act.ini")
+        or die "There's no conference act.ini for the test setup!: '$!'";
+    open (my $outi,'>', "$tempdir/conferences/$id/actdocs/conf/act.ini")
+        or die "Could not write the new configuration file: '$!'";
+
+    while (defined(my $line = <$ini>)) {
+        $line =~ s/(name_en\s*=\s*)Testconference/$1$name/;
+        print $outi $line;
+    }
+    close $ini;
+    close $outi;
+
+    # Add the id of the new conference to the global act.ini
+    open (my $ing, '<', "$RealBin/acthome/conf/act.ini")
+        or die "There's no act.ini for the test setup!: '$!'";
+    open (my $outg,'>', "$tempdir/conf/act.ini")
+        or die "Could not write the new configuration file: '$!'";
+
+    while (defined(my $line = <$ing>)) {
+        $line =~ s/(^\s*conferences.*$)/$1 $id/;
+        print $outg $line;
+    }
+    close $ing;
+    close $outg;
+
 }
 
 1;
