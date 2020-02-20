@@ -78,10 +78,26 @@ my %private_handlers = (
 );
 
 sub to_app {
-    Act::Config::reload_configs();
     my $app            = builder {
         enable 'Debug', panels => [split(/\s+/, $ENV{ACT_DEBUG})]
             if $ENV{ACT_DEBUG};
+        enable sub {
+            my $app = shift;
+            sub {
+                my $env = shift;
+
+                # Make sure there is no trailing slash in base_url
+                my $req = Plack::Request->new($env);
+                my $base_url = $req->base->as_string;
+                $base_url =~ s{/$}{};
+                $env->{'act.base_url'} = $base_url;
+
+                Act::Config::reload_configs();
+                $env->{'act.dbh'}      = Act::Util::db_connect();
+
+                $app->($env);
+            }
+        };
         enable 'Session',
             state       => Plack::Session::State::Cookie->new(
                 session_key => 'act_session',
@@ -92,20 +108,6 @@ sub to_app {
             ;
         enable 'ReverseProxy';
         enable '+Act::Middleware::ErrorPage';
-        enable sub {
-            my $app = shift;
-            sub {
-                my $env = shift;
-                my $req = Plack::Request->new($env);
-
-                # Make sure there is no trailing slash in base_url
-                my $base_url = $req->base->as_string;
-                $base_url =~ s{/$}{};
-                $env->{'act.base_url'} = $base_url;
-                $env->{'act.dbh'}      = Act::Util::db_connect();
-                $app->($env);
-            };
-        };
 
         mount "/photos" => root_file_app($Config->general_dir_photos);
         my %confr = %{ $Config->uris },
