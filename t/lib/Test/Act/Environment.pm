@@ -105,6 +105,7 @@ sub add_conference ($self,$id,$name) {
 
     while (defined(my $line = <$ini>)) {
         $line =~ s/(name_en\s*=\s*)Testconference/$1$name/;
+        $line =~ s/(full_uri\s*=\s*.*?)testing$/$1$id/;
         print $outi $line;
     }
     close $ini;

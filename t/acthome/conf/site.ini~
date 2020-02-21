@@ -1,0 +1,5 @@
+[demo]
+database_name   = act
+database_dsn    = dbi:Pg:dbname=$(database_name)test
+database_user   = act
+database_passwd = act123
