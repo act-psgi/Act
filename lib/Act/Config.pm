@@ -309,13 +309,16 @@ sub load_configs
 # reload configuration if one of the ini files has changed
 sub reload_configs
 {
+    my $configs_changed = 0;
     while (my ($file, $timestamp) = each %Timestamps) {
         my $mtime = (stat($file))[9];
         if (!defined($mtime) or $mtime > $timestamp) {
+            $configs_changed = 1;
             load_configs();
             last;
         }
     }
+    return $configs_changed;
 }
 # get configuration for current request
 sub get_config

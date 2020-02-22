@@ -9,7 +9,6 @@ use Act::Session::Store;
 use File::Spec::Functions qw(catfile rel2abs);
 use List::Util qw(first);
 use Module::Pluggable::Object;
-use Plack::App::Cascade;
 use Plack::App::File;
 use Plack::Builder;
 use Plack::Middleware::Debug;
@@ -78,7 +77,26 @@ my %private_handlers = (
 );
 
 sub to_app {
-    my $app            = builder {
+    my $app = act_app();
+    builder {
+        enable sub {
+            my $app = shift;
+            sub {
+                my $env = shift;
+                if (Act::Config::reload_configs()) {
+                    # Re-build the app to cover new conferences
+                    $app = act_app();
+                }
+                $env->{'act.dbh'}      = Act::Util::db_connect();
+                $app->($env);
+            }
+        };
+        $app;
+    };
+}
+
+sub act_app {
+    builder {
         enable 'Debug', panels => [split(/\s+/, $ENV{ACT_DEBUG})]
             if $ENV{ACT_DEBUG};
         enable sub {
@@ -92,9 +110,7 @@ sub to_app {
                 $base_url =~ s{/$}{};
                 $env->{'act.base_url'} = $base_url;
 
-                Act::Config::reload_configs();
                 $env->{'act.dbh'}      = Act::Util::db_connect();
-
                 $app->($env);
             }
         };
@@ -128,8 +144,9 @@ sub to_app {
             return $files->($env);
         };
     };
-    return $app;
 }
+
+
 
 sub conference_app {
     my $conference = shift;
