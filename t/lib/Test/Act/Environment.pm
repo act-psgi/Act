@@ -123,7 +123,24 @@ sub add_conference ($self,$id,$name) {
     }
     close $ing;
     close $outg;
+}
 
+sub remove_conference ($self,$id) {
+    # Don't bother with removing the conference's directory.  It
+    # should not matter for act, and it is a temporary dir anyway.
+
+    # Remove the id of the new conference from the global act.ini
+    open (my $ing, '<', "$RealBin/acthome/conf/act.ini")
+        or die "There's no act.ini for the test setup!: '$!'";
+    open (my $outg,'>', "$tempdir/conf/act.ini")
+        or die "Could not write the new configuration file: '$!'";
+
+    while (defined(my $line = <$ing>)) {
+        $line =~ s/(^\s*conferences\b.*?)\s*$id\b/$1/;
+        print $outg $line;
+    }
+    close $ing;
+    close $outg;
 }
 
 1;
@@ -195,6 +212,18 @@ test ends.
 
 This method provides you with a fresh web client based on
 L<Test::WWW::Mechanize>.
+
+=head2 $testenv->add_conference($id,$name)
+
+Adds a conference with id $id (for URL routing) and conference name
+$name.  The new conference is just a copy of the default one, only the
+conference name is changed, and it is listed in the general
+conferences under id.
+
+=head2 $testenv->remove_conference($id)
+
+Removes the conference with id $id from the global Act configuration.
+The conference files stay untouched.
 
 =head1 DIAGNOSTICS
 
