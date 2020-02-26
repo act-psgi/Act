@@ -256,21 +256,25 @@ sub usort(&@)
 
 
 sub ua_isa_bot {
-    $Request{r}->header_in('User-Agent') =~ /
-      altavista
-    | crawler
+    $Request{r}->header_in('User-Agent') =~ m!
+      # altavista # out of service since 2003
+      crawler
     | gigabot
     | googlebot
     | hatena
+    | ltx71       # http://ltx71.com/ - claims to be "security checking"
+    | mj12bot     # http://mj12bot.com/; https://majestic.com/
     | msnbot
+    | netsystemsresearch # netsystemsresearch.com - claims "security"
     | infoseek
     | libwww-perl
     | lwp
     | lycos
+    | pdrlabs     # http://www.pdrlabs.net "Internet Mapping Experiment"
     | spider
     | wget
     | yahoo
-    /ix;
+    !ix;
 }
 
 use DateTime;
@@ -402,6 +406,10 @@ by C<Unicode::Collate>.
 
 Return a true value is the client User-Agent string gives it away as
 a robot.
+
+I<Note:> As of 2020-02-21, this subroutine is not being called from
+anywhere within the codebase.  It will be eliminated unless some use
+case comes up.
 
 =back
 
