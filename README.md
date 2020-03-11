@@ -41,6 +41,8 @@ environments that are the same for every developer. To create a new
 environment, you first need to install `docker` and `docker-compose`.
 For docker please follow the installation instructions as found on the
 [docker documenation page](https://docs.docker.com/engine/installation/).
+The minimum versions we use for testing are Docker version 19.03.6 and
+docker-compose version 1.17.1.
 
 Docker is very disk consuming, make sure you have sufficient space
 somewhere for docker to use. One can tweak the default `/var/lib/docker`
