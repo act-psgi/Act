@@ -26,7 +26,6 @@ maintain it.
 ## TL;DR
 
 ```
-./dev-bin/docker-maintenance.sh
 docker-compose up
 ```
 
