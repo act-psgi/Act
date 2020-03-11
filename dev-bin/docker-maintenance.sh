@@ -20,9 +20,6 @@ set -e
 echo "Stopping and rebuilding containers"
 docker-compose rm -f -s $@
 
-# Regenerate configs so we don't mount files as directories
-"$DIR"/dev-bin/generate-config.sh
-
 docker-compose pull $@
 docker-compose build --pull $@
 docker-compose up --no-start $@

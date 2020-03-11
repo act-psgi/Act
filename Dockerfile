@@ -19,5 +19,5 @@ COPY po          /opt/acthome/po
 COPY conferences /opt/acthome/conferences
 COPY . .
 
-
+ENTRYPOINT [ "/opt/act/docker-entrypoint.sh" ]
 CMD [ "plackup", "app.psgi" ]
