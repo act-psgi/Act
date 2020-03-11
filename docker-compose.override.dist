@@ -13,6 +13,9 @@ services:
   act-wiki-db:
     ports:
       - "5433:5432"
+  smtpd:
+    ports:
+      - "8025:8025"
 
 networks:
     default:

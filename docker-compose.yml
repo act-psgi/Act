@@ -32,6 +32,8 @@ services:
     image: "postgres:11"
     networks:
       - "default"
+    expose:
+      - "5432"
     environment:
       - "POSTGRES_USER=act"
       - "POSTGRES_PASSWORD=act123"
@@ -43,10 +45,10 @@ services:
       - "./db/act/template.sql:/docker-entrypoint-initdb.d/00_init_db.sql"
   act-wiki-db:
     image: "postgres:11"
-    ports:
-      - "5433:5432"
     networks:
       - "default"
+    expose:
+      - "5432"
     environment:
       - "POSTGRES_USER=act"
       - "POSTGRES_PASSWORD=act123"
@@ -60,8 +62,6 @@ services:
     image: mailhog/mailhog:v1.0.0
     expose:
       - "1025"
-    ports:
-      - "8025:8025"
 
 volumes:
   act_db:
