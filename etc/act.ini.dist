@@ -24,6 +24,9 @@ test_host        = act-db
 test_user        = act
 test_passwd      = act123
 
+pg_dump     = 1
+dump_file   = /tmp/db_dump
+
 # Disable version checking, defaults to true
 version_check = 0
 
