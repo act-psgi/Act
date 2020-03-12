@@ -56,7 +56,6 @@ requires "Module::Pluggable::Object" => "0";
 requires "Moo" => "0";
 requires "MooX::Singleton" => "0";
 requires "Net::OpenID::Server" => "0";
-requires "Plack::App::Cascade" => "0";
 requires "Plack::App::File" => "0";
 requires "Plack::Builder" => "0";
 requires "Plack::Component" => "0";
@@ -133,7 +132,6 @@ on 'test' => sub {
   requires "Test::More" => "0.98";
   requires "Test::Pod" => "0";
   requires "YAML::Tiny" => "0";
-  requires "charnames" => "0";
   requires "open" => "0";
 };
 
