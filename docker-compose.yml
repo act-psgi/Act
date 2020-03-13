@@ -62,6 +62,8 @@ services:
     image: mailhog/mailhog:v1.0.0
     expose:
       - "1025"
+    ports:
+      - "8025:8025"
 
 volumes:
   act_db:
