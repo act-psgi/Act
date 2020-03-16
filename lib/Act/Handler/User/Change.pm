@@ -100,7 +100,7 @@ sub _update_user_information {
 sub handler {
     my $template = Act::Template::HTML->new();
     my $fields;
-    my $form = Act::Form->new( @form_params, 
+    my $form = Act::Form->new( @form_params,
         optional => [qw(im salutation email_hide gpg_key_id pause_id
                         pseudonymous nick_name
                         monk_id pm_group pm_group_url timezone town web_page
@@ -109,13 +109,11 @@ sub handler {
                         map { "bio_$_" } keys %{ $Config->languages } ]
     );
 
-    my $request = $Request{r};
-
-    if ($request->body_parameters->{join}) {
+    if ($Request{args}{join}) {
         $fields = _update_user_information(
             template => $template,
             form     => $form,
-            params   => $request->body_parameters,
+            params   => $Request{args},
         );
     }
     else {
