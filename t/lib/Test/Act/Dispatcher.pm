@@ -86,6 +86,8 @@ $cfg->set_always(uris => \%uris)
     ->set_always(database_host => $Config->database_test_host)
     ->set_always(general_dir_static => 'test_static')
     ->set_always(general_dir_conferences => 'test_dir_conferences')
+    ->set_always(email_hostname => 'localhost')
+    ->set_always(email_port => '25')
     ;
 
 
