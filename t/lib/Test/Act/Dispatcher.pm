@@ -53,6 +53,7 @@ sub _report {
     my $report = {
         app        => ref $self,
         path_info  => $env->{PATH_INFO},
+        base_url   => $env->{'act.base_url'},
         middleware => $env->{"act.test"}{middleware} // [],
         @_,
     };

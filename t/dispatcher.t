@@ -153,7 +153,7 @@ subtest "Paths without a conference path" => sub {
 
 
 subtest "Conference pages" => sub {
-    plan tests => 10;
+    plan tests => 11;
     {
         # Root page for a conference should be re-routed to static
         # processing of index.html.  Language processing and
@@ -196,6 +196,19 @@ subtest "Conference pages" => sub {
             "'$path': Conference HTML pages are static");
         is ($report{path_info},'/venue.html',
             "'$path': ...correctly routed to the conference app");
+    }
+
+    {
+        # URL rewriting in case of frontend web server
+        # Verify https://github.com/act-psgi/ACT-PSGI-demo/issues/9
+        my $path = '/foo/venue.html';
+        my %report = $driver->request(GET $path,
+                                      'X-Forwarded-For'  => '127.0.0.1',
+                                      'X-Forwarded-Host' => 'proxied',
+                                      'X-Forwarded-Proto' => 'https',
+                                  );
+        is($report{base_url},'https://proxied',
+           "Reverse proxy handling is active");
     }
 };
 
