@@ -99,6 +99,7 @@ sub act_app {
     builder {
         enable 'Debug', panels => [split(/\s+/, $ENV{ACT_DEBUG})]
             if $ENV{ACT_DEBUG};
+        enable 'ReverseProxy';
         enable sub {
             my $app = shift;
             sub {
@@ -122,7 +123,6 @@ sub act_app {
             ),
             store       => Act::Session::Store->new(),
             ;
-        enable 'ReverseProxy';
         enable '+Act::Middleware::ErrorPage';
 
         mount "/photos" => root_file_app($Config->general_dir_photos);
