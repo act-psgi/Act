@@ -201,6 +201,11 @@ L<HTTP::Request::Common>.  It receives the response which is a
 serialized hash, and converts it back to the hash for easy access by
 the test cases.
 
+Additional headers for the HTTP request can also be provided (also
+courtesy of L<HTTP::Request::Common>), as in this example:
+
+   my %report = $driver->request(GET $path, "User-Agent" => "MyRobot/5.0");
+
 =head2 Exported functions
 
 The module exports:
@@ -230,6 +235,9 @@ The mock handler provides the following keys for examination:
 =item C<path_info> - the path seen by this application
 
 =item C<middleware> - a list reference of middleware components for this path
+
+=item C<base_url> - This request's base URL from the C<base> method of
+L<Plack::Request>
 
 =back
 
