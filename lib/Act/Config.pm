@@ -175,6 +175,7 @@ our %Image_formats = (
 my @Optional = qw(
     talks_show_all talks_notify_accept talks_levels talks_languages
     talks_submissions_notify_address talks_submissions_notify_language
+    talks_schedule_default
     database_debug general_dir_ttc
     flickr_apikey flickr_tags
     payment_prices payment_products payment_notify_address
