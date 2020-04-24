@@ -1,0 +1,168 @@
+[%# This template is used to create an act.ini file from a conference definition
+    in an Act::Conference object which is expected to be passed as the variable
+    named 'conference'.
+-%]
+[%# show_label: Expands the different languages from an
+    Act::Conference::Label object to the corresponding config file prefix
+-%]
+[% MACRO show_label (prefix,label) BLOCK;
+       FOREACH language IN conference.languages.sort;
+           GET prefix; '_'; GET language; ' = '; label.$language;
+           "\n" UNLESS loop.last;
+       END;
+   END;
+%]
+[% CLEAR -%]
+[general]
+# this conference's full production URI
+# with trailing slash
+full_uri = [% conference.full_uri %]
+
+# supported languages, and the default language
+#    You can specify a language variant, e.g. en_US or en_GB.
+#    If you do, specify it solely in the "languages" entry,
+#    use the main language ("en") everywhere else.
+languages        = [% conference.languages.join(' ') %]
+default_language = [% conference.default_language %]
+
+# name of the conference in each supported language
+        [%- FOR language IN conference.languages %]
+name_[% language %]          = [% conference.name.$language %]
+        [%- END %]
+
+# default country and timezone for new users
+default_country  = [% conference.default_country %]
+timezone         = [% conference.timezone %]
+
+# pager limit for the user search page
+searchlimit      = [% conference.searchlimit %]
+
+[registration]
+open = [% conference.registration.open %]
+# optional maximum number of attendees
+# omit this is not applicable
+        [%- IF conference.registration.max_attendees %]
+max_attendees = [% conference.registration.max_attendees %]
+        [%- ELSE %]
+#max_attendees = 100
+        [%- END %]
+
+# optional
+# selects different phrases about "buying tickets", to be used when
+# people can get it without actually paying. NOTE: if you set this to
+# 1, there really should be a registration price of 0, otherwise users
+# will get the nasty surprise of having to pay for a ticket that was
+# promised "free of charge"...
+[% IF NOT conference.registration.gratis %]#[% END -%]
+gratis = 1
+
+[email]
+sender_address = [% conference.email_sender_address %]
+
+[talks]
+# conference dates
+start_date = [% conference.talks.start_date %]
+end_date   = [% conference.talks.end_date %]
+
+# default talk durations
+durations = [% conference.talks.durations.keys.nsort.join(' ') %]
+
+# can talks be submitted?
+submissions_open = [% conference.talks.submissions_open %]
+
+# submission notification emails settings
+submissions_notify_address  = [% conference.talks.submissions_notify_address %]
+[% IF NOT conference.talks.submissions_notify_language %]#[% END -%]
+submissions_notify_language = [% conference.talks.submissions_notify_language %]
+
+# email the speaker when the talk is accepted
+notify_accept = [% conference.talks.notify_acceopt %]
+
+# can users edit talks?
+edition_open  = [% conference.talks.edition_open %]
+
+# is the schedule publically visible?
+show_schedule = [% conference.talks.show_schedule %]
+
+# schedule date to show when none specified
+[% IF NOT conference.talks.schedule_default -%]#[% END -%]
+schedule_default = [% conference.talks.schedule_default %]
+
+# show accepted talks, or all
+show_all  = [% conference.talks.show_all %]
+
+# talk languages. Use for multilingual conferences.
+# If omitted, the language from the [general] section will be used.
+        [%- IF conference.talks.languages.size %]
+languages = [% conference.talks.languages.keys.sort.join(' ') %]
+        [%- ELSE %]
+#languages = (space separated list)
+        [%- END %]
+
+# target audience. Omit this, and
+# the [levels] section, if not used
+        [%- IF conference.talks.levels %]
+levels = [% conference.talks.levels.size %]
+
+[levels]
+# level names in all supported languages
+            [%- FOREACH language IN conference.languages %]
+                [%- SET ln = 1 %]
+                [%- FOREACH level IN conference.talks.levels %]
+level[% ln; ln = ln + 1 %]_name_[% language %] = [% level.name.$language %]
+                [%- END %]
+            [%- END %]
+        [%- END %]
+
+[rooms]
+# list of rooms (must match /r\d+/)
+rooms = [% conference.rooms.keys.sort.join(' ') %]
+# room names in all supported languages
+        [%- FOREACH room IN conference.rooms.keys.sort %]
+[% show_label( room _ '_name', conference.rooms.$room.name ) -%]
+        [%- END %]
+
+[payment]
+open = [% IF conference.payment_open; '1'; ELSE; '0'; END -%]
+
+# which payment system? (Fake/NONE/YEF/TPF/...)
+#  Fake: payment simulation, for tests
+#  NONE: the conference is free
+#  DELAYED: the strange thingy we're using today
+#  YEF:  using the YAPC Europe Foundation's payment system (defunct)
+#  TPF:  using The Perl Foundation's payment system (defunct)
+#  PaypalFoo: using a Paypal account (defunct)
+type = [% conference.payment_type %]
+
+        [%- IF conference.payment_type != 'NONE' %]
+# if type is "NONE", the following configuration should be ommitted
+# currency. Valid values depends on the payment type
+currency = [% conference.payment_currency %]
+
+# the products your are selling
+# these are non user visible product codes for configuration purposes only
+# "registration" is special - it's the registration product
+products = [% conference.products.keys.sort.join(' ') %]
+
+# Details on each product
+            [%- FOREACH product IN conference.products %]
+[product_[% product.key %]]
+[% show_label( 'name', product.value.name ) %]
+prices = [% product.value.prices.size %]
+
+                [%- FOREACH price IN product.value.prices %]
+[product_[% product.key %]_price[% loop.count %]]
+[% show_label( 'name', price.name ) %]
+amount = [% price.amount %]
+                    [%- IF price.promocode %]
+promocode = "[% price.promocode %]"
+                    [%- END %]
+                    [%- "\n" UNLESS loop.last %]
+                [%- END %]
+            [%- END %]
+[%# TODO: Special case of only one price - fallback to this product's name
+# you can omit price name if there's only one price
+    [product_accomodation_price1]
+    amount      = 15
+-%]
+        [%- END %]
