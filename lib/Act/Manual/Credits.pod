@@ -88,6 +88,7 @@ conference...
   Joakim
   Leon Brocard
   Liz Cortell
+  Martin Barth
   Michal Wojciechowski
   Ole Bendik Kvisberg
   Olivier Mengué
@@ -107,7 +108,7 @@ conference...
 =head2 Translations
 
   be: Andrei Protasovitski, Taras Ivanyukovich
-  de: Thomas Klausner
+  de: Thomas Klausner, Renée Bäcker
   es: Enrique Nell
   he: Uri Bruck
   hr: Vedran Vukotic, Vlatko Kosturjak
