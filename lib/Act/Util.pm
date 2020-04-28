@@ -3,7 +3,7 @@ use utf8;
 package Act::Util;
 
 use Act::Config;
-use Act::Database;
+use Act::Store::Database;
 use DBI;
 use DateTime::Format::HTTP;
 use Digest::MD5 ();
@@ -65,6 +65,9 @@ sub search_expression
 }
 
 # TODO: Move to Act::Database?
+# -- haj 2020-04-28: We keep the connection here for the moment.
+#    Act relies on  AutoCommit => 0, which is not the recommended
+#    way with DBIx::Class.
 # connect to the database
 sub db_connect
 {
@@ -86,22 +89,9 @@ sub db_connect
 
     # check schema version
     if ($Config->database_version_check // 1) {
-        _check_db_version($Request{dbh});
+        Act::Store::Database->instance->_check_db_version();
     }
     return $Request{dbh};
-}
-
-# TODO: Move to Act::Database?
-sub _check_db_version {
-    my $dh = shift;
-    my ($version, $required) = Act::Database::get_versions($dh);
-
-    if ($version > $required) {
-        die "database schema version $version is too recent: this code runs version $required\n";
-    }
-    if ($version < $required) {
-        die "database schema version $version is too old: version $required is required. Run bin/dbupdate\n";
-    }
 }
 
 sub format_datetime_string {

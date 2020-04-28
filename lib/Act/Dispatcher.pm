@@ -87,7 +87,6 @@ sub to_app {
                     # Re-build the app to cover new conferences
                     $app = act_app();
                 }
-                $env->{'act.dbh'}      = Act::Util::db_connect();
                 $app->($env);
             }
         };

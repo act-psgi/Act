@@ -62,14 +62,7 @@ sub _build_connector ($self) {
 
 sub _build_schema ($self) {
     my $dbh = Act::Store::Database->instance->dbh;
-    my $schema = Act::Schema->connect( sub { $dbh },
-                                      { AutoCommit => 1,
-                                        PrintError => 0,
-                                        RaiseError => 1,
-                                        pg_enable_utf8 => 1,
-                                      }
-                                  );
-    return $schema;
+    return Act::Schema->connect( sub { $dbh } );
 }
 
 =head1 METHODS
