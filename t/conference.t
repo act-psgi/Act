@@ -96,19 +96,10 @@ use Act::Config;
     $Config = Act::Config::get_config('testing');
     my $conference = Act::Conference->from_config($Config);
 
-    use Data::Printer { class => { expand       => 'all',
-                                   show_methods => 'none',
-                                   parents      => 0,
-                                 },
-                        colored => 1,
-                      };
     isa_ok($conference,'Act::Conference','from config data');
-    binmode STDERR, ':encoding(UTF-8)';
-    p $conference;
 
     my $out;
     $conference->write_config(\$out);
-    p $out;
 
     # now just randomly check some entries in the resulting config file
     like($out,qr!\[general\]  # in section [general]
